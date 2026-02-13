@@ -28,6 +28,18 @@
     }
 
     canvas#fx{ position:fixed; inset:0; width:100%; height:100%; z-index:1; pointer-events:none; }
+    .heartLayer{ position:fixed; inset:0; z-index:2; pointer-events:none; overflow:hidden; }
+    .floatHeart{
+      position:absolute;
+      top:-10vh;
+      font-size: clamp(24px, 3vw, 40px);
+      animation: driftDown linear forwards;
+      filter: drop-shadow(0 3px 5px rgba(255,92,162,.25));
+      opacity:.9;
+    }
+    @keyframes driftDown{
+      to{ transform: translate3d(var(--dx), 112vh, 0) rotate(var(--rot)); opacity:.15; }
+    }
 
     .sticker{
       position:fixed;
@@ -111,6 +123,7 @@
 <body>
   <script>localStorage.removeItem("val_ok");</script>
   <canvas id="fx"></canvas>
+  <div class="heartLayer" id="heartLayer"></div>
 
   <div class="sticker s1">💖</div>
   <div class="sticker s2">🌸</div>
@@ -141,6 +154,21 @@
       burst(90);
       setTimeout(()=> window.location.href = "verify.html", 520);
     });
+
+    const heartLayer = document.getElementById('heartLayer');
+    const heartIcons = ['💖','💗','💘','💕'];
+    function spawnFloatHeart(){
+      const h = document.createElement('span');
+      h.className = 'floatHeart';
+      h.textContent = heartIcons[(Math.random() * heartIcons.length) | 0];
+      h.style.left = `${Math.random() * 100}%`;
+      h.style.setProperty('--dx', `${(Math.random() * 80 - 40).toFixed(1)}px`);
+      h.style.setProperty('--rot', `${(Math.random() * 80 - 40).toFixed(1)}deg`);
+      h.style.animationDuration = `${6 + Math.random() * 5}s`;
+      heartLayer.appendChild(h);
+      h.addEventListener('animationend', ()=> h.remove(), { once:true });
+    }
+    setInterval(spawnFloatHeart, 380);
 
     const canvas = document.getElementById('fx');
     const ctx = canvas.getContext('2d', { alpha:true });

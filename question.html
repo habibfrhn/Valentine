@@ -21,6 +21,18 @@
         linear-gradient(145deg,#fff8fc,#fff2fa 45%,#f7fdff);
     }
     canvas#fx{ position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:1; }
+    .heartLayer{ position:fixed; inset:0; z-index:2; pointer-events:none; overflow:hidden; }
+    .floatHeart{
+      position:absolute;
+      top:-10vh;
+      font-size: clamp(24px, 3vw, 40px);
+      animation: driftDown linear forwards;
+      filter: drop-shadow(0 3px 5px rgba(255,92,162,.25));
+      opacity:.95;
+    }
+    @keyframes driftDown{
+      to{ transform: translate3d(var(--dx), 112vh, 0) rotate(var(--rot)); opacity:.12; }
+    }
 
     .stickerLayer{ position:fixed; inset:0; z-index:2; pointer-events:none; }
     .sticker{ position:absolute; font-size: clamp(34px, 4.5vw, 65px); opacity:.95; }
@@ -86,6 +98,7 @@
     if(localStorage.getItem("val_ok") !== "yes") window.location.href = "verify.html";
   </script>
   <canvas id="fx"></canvas>
+  <div class="heartLayer" id="heartLayer"></div>
   <div class="stickerLayer" id="stickerLayer"></div>
 
   <div class="wrap">
@@ -117,6 +130,21 @@
     const no = document.getElementById('no');
     const noteBody = document.getElementById('noteBody');
     const mini = document.getElementById('mini');
+
+    const heartLayer = document.getElementById('heartLayer');
+    const heartIcons = ['💖','💗','💘','💕','💞'];
+    function spawnFloatHeart(){
+      const h = document.createElement('span');
+      h.className = 'floatHeart';
+      h.textContent = heartIcons[(Math.random() * heartIcons.length) | 0];
+      h.style.left = `${Math.random() * 100}%`;
+      h.style.setProperty('--dx', `${(Math.random() * 100 - 50).toFixed(1)}px`);
+      h.style.setProperty('--rot', `${(Math.random() * 120 - 60).toFixed(1)}deg`);
+      h.style.animationDuration = `${6 + Math.random() * 4}s`;
+      heartLayer.appendChild(h);
+      h.addEventListener('animationend', ()=> h.remove(), { once:true });
+    }
+    setInterval(spawnFloatHeart, 320);
 
     const stickers = ['💗','💞','🌸','🎀','✨','🫶','💘','🍓'];
     const layer = document.getElementById('stickerLayer');

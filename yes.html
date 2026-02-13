@@ -12,7 +12,10 @@
       background:linear-gradient(145deg,#fff8fc,#fff1fa 42%,#f6fdff);
     }
     canvas{ position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:1; }
-    .wrap{ position:relative; z-index:2; min-height:100%; display:grid; place-items:center; padding:20px; }
+    .heartLayer{ position:fixed; inset:0; z-index:2; pointer-events:none; overflow:hidden; }
+    .floatHeart{ position:absolute; top:-10vh; font-size: clamp(24px, 3vw, 40px); animation: driftDown linear forwards; filter: drop-shadow(0 3px 5px rgba(255,92,162,.25)); opacity:.95; }
+    @keyframes driftDown{ to{ transform: translate3d(var(--dx), 112vh, 0) rotate(var(--rot)); opacity:.1; } }
+    .wrap{ position:relative; z-index:3; min-height:100%; display:grid; place-items:center; padding:20px; }
     .card{
       width:min(1120px,95vw); min-height:82vh; border-radius:30px; background:rgba(255,255,255,.76); backdrop-filter: blur(8px);
       border:2px dashed #ff9dcf; box-shadow:0 18px 60px rgba(202,71,144,.25); padding:20px; position:relative; overflow:hidden;
@@ -34,6 +37,7 @@
     if(localStorage.getItem("val_ok") !== "yes") window.location.href = "verify.html";
   </script>
   <canvas id="fx"></canvas>
+  <div class="heartLayer" id="heartLayer"></div>
   <div class="wrap">
     <main class="card">
       <h1>I am the luckiest person on earth 💞</h1>
@@ -51,6 +55,20 @@
   <script>
     const box=document.getElementById('playground');
     const photos=[];
+    const heartLayer = document.getElementById('heartLayer');
+    const heartIcons = ['💖','💗','💘','💕','💞'];
+    function spawnFloatHeart(){
+      const h = document.createElement('span');
+      h.className = 'floatHeart';
+      h.textContent = heartIcons[(Math.random() * heartIcons.length) | 0];
+      h.style.left = `${Math.random() * 100}%`;
+      h.style.setProperty('--dx', `${(Math.random() * 90 - 45).toFixed(1)}px`);
+      h.style.setProperty('--rot', `${(Math.random() * 100 - 50).toFixed(1)}deg`);
+      h.style.animationDuration = `${6 + Math.random() * 4}s`;
+      heartLayer.appendChild(h);
+      h.addEventListener('animationend', ()=> h.remove(), { once:true });
+    }
+    setInterval(spawnFloatHeart, 320);
     for(let i=10;i<=20;i++){
       const el=document.createElement('div'); el.className='photo';
       el.innerHTML=`<img src="photos/${i}.jpeg" alt="Photo ${i}"><div class="cap">moment ${i}</div>`;
