@@ -3,11 +3,10 @@
   const KEY_ALLOWED = 'valentine_audio_allowed';
   const KEY_MODE = 'valentine_audio_mode';
   const KEY_SHOULD_PLAY = 'valentine_audio_should_play';
-  const SOURCES = ['audio/baby-blue.mp3', '/audio/baby-blue.mp3', './audio/baby-blue.mp3'];
+  const AUDIO_SRC = 'audio/baby-blue.mp3';
 
   let audio;
   let audioCtx;
-  let synthTimer = null;
 
   function saveTime() {
     if (!audio || Number.isNaN(audio.currentTime)) return;
@@ -29,53 +28,12 @@
     else audio.addEventListener('loadedmetadata', seek, { once: true });
   }
 
-  function stopSynth() {
-    if (synthTimer) {
-      clearTimeout(synthTimer);
-      synthTimer = null;
-    }
-  }
-
   function ensureAudioContext() {
     if (audioCtx) return audioCtx;
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     if (!AudioCtx) return null;
     audioCtx = new AudioCtx();
     return audioCtx;
-  }
-
-  function runSynthLoop() {
-    const ctx = ensureAudioContext();
-    if (!ctx) return;
-
-    const notes = [261.63, 329.63, 392.0, 523.25, 392.0, 329.63];
-    const beat = 0.33;
-
-    const playPhrase = () => {
-      if (!audioCtx || audioCtx.state === 'closed') return;
-      const now = audioCtx.currentTime + 0.02;
-      notes.forEach((freq, i) => {
-        const t = now + i * beat;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, t);
-        gain.gain.setValueAtTime(0.0001, t);
-        gain.gain.exponentialRampToValueAtTime(0.03, t + 0.04);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + beat * 0.92);
-        osc.connect(gain).connect(audioCtx.destination);
-        osc.start(t);
-        osc.stop(t + beat);
-      });
-      synthTimer = setTimeout(playPhrase, notes.length * beat * 1000);
-    };
-
-    stopSynth();
-    playPhrase();
-    try {
-      localStorage.setItem(KEY_MODE, 'synth');
-      localStorage.setItem(KEY_SHOULD_PLAY, 'true');
-    } catch (e) {}
   }
 
   function markAllowed() {
@@ -90,17 +48,16 @@
         localStorage.setItem(KEY_MODE, 'file');
         localStorage.setItem(KEY_SHOULD_PLAY, 'true');
       } catch (e) {}
-      stopSynth();
       return true;
     }).catch(() => false);
   }
 
-  function tryPlayWithFallback() {
+  function tryPlayAudio() {
     return tryAudioElementPlayback().then((ok) => {
-      if (ok) return true;
-      runSynthLoop();
-      markAllowed();
-      return true;
+      if (!ok) {
+        try { localStorage.setItem(KEY_MODE, 'file-error'); } catch (e) {}
+      }
+      return ok;
     });
   }
 
@@ -109,7 +66,7 @@
     if (ctx && ctx.state === 'suspended') {
       ctx.resume().catch(() => {});
     }
-    return tryPlayWithFallback();
+    return tryPlayAudio();
   }
 
   function playFromGesture() {
@@ -121,7 +78,7 @@
   }
 
   function handleAudioError() {
-    runSynthLoop();
+    try { localStorage.setItem(KEY_MODE, 'file-error'); } catch (e) {}
     markAllowed();
   }
 
@@ -139,12 +96,10 @@
     audio.setAttribute('playsinline', '');
     audio.style.display = 'none';
 
-    SOURCES.forEach((src) => {
-      const source = document.createElement('source');
-      source.src = src;
-      source.type = 'audio/mpeg';
-      audio.appendChild(source);
-    });
+    const source = document.createElement('source');
+    source.src = AUDIO_SRC;
+    source.type = 'audio/mpeg';
+    audio.appendChild(source);
 
     audio.addEventListener('error', handleAudioError);
     audio.addEventListener('stalled', handleAudioError);
@@ -156,10 +111,10 @@
 
     resumeTime();
     if (shouldAutoPlay()) {
-      tryPlayWithFallback();
+      tryPlayAudio();
     }
 
-    if (localStorage.getItem(KEY_ALLOWED) === 'yes' || localStorage.getItem(KEY_MODE) === 'synth') {
+    if (localStorage.getItem(KEY_ALLOWED) === 'yes') {
       unlockAndPlay();
     }
 
