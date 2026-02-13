@@ -3,8 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>For Shana</title>
+  <title>For Shana</title>
   <script defer src="audio-player.js"></script>
+  <link rel="stylesheet" href="heart-effects.css" />
+  <script defer src="heart-effects.js"></script>
   <style>
     :root{
       --ink:#4b2a49;
@@ -187,7 +189,10 @@
   </div>
 
   <script>
-    document.getElementById('start').addEventListener('click', ()=>{
+    document.getElementById('start').addEventListener('click', async ()=>{
+      if (typeof window.valentineStartAudio === 'function') {
+        await window.valentineStartAudio();
+      }
       burst(90);
       setTimeout(()=> window.location.href = "verify.html", 520);
     });

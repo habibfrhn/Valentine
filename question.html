@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>The Question</title>
   <script defer src="audio-player.js"></script>
+  <link rel="stylesheet" href="heart-effects.css" />
+  <script defer src="heart-effects.js"></script>
   <style>
     *{ box-sizing:border-box; }
     html,body{ height:100%; }
@@ -214,7 +216,10 @@
       setTimeout(()=>t.remove(), 950);
     }
 
-    yes.addEventListener('click', ()=>{
+    yes.addEventListener('click', async ()=>{
+      if (typeof window.valentineStartAudio === 'function') {
+        await window.valentineStartAudio();
+      }
       yes.disabled=true; no.disabled=true;
       noteBody.textContent='YESSS! initiating romantic celebration mode ✨';
       mini.textContent='Launching hearts, sparkles, and happy chaos.';

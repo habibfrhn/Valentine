@@ -97,9 +97,10 @@
 
   function tryPlayWithFallback() {
     return tryAudioElementPlayback().then((ok) => {
-      if (ok) return;
+      if (ok) return true;
       runSynthLoop();
       markAllowed();
+      return true;
     });
   }
 
@@ -108,7 +109,15 @@
     if (ctx && ctx.state === 'suspended') {
       ctx.resume().catch(() => {});
     }
-    tryPlayWithFallback();
+    return tryPlayWithFallback();
+  }
+
+  function playFromGesture() {
+    try {
+      localStorage.setItem(KEY_SHOULD_PLAY, 'true');
+      localStorage.setItem(KEY_ALLOWED, 'yes');
+    } catch (e) {}
+    return unlockAndPlay();
   }
 
   function handleAudioError() {
@@ -158,6 +167,8 @@
     unlockEvents.forEach((evt) => {
       window.addEventListener(evt, unlockAndPlay);
     });
+
+    window.valentineStartAudio = playFromGesture;
 
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden && shouldAutoPlay()) unlockAndPlay();

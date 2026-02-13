@@ -5,11 +5,16 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Yes</title>
   <script defer src="audio-player.js"></script>
+  <link rel="stylesheet" href="heart-effects.css" />
+  <script defer src="heart-effects.js"></script>
   <style>
     *{ box-sizing:border-box; }
     html,body{ height:100%; }
     body{
-      margin:0; overflow:hidden; font-family:"Trebuchet MS",system-ui,sans-serif; color:#4a2446;
+      margin:0;
+      overflow:hidden;
+      font-family:"Trebuchet MS",system-ui,sans-serif;
+      color:#4a2446;
       background:linear-gradient(145deg,#fff8fc,#fff1fa 42%,#f6fdff);
     }
     canvas{ position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:1; }
@@ -18,20 +23,49 @@
     @keyframes driftDown{ to{ transform: translate3d(var(--dx), 112vh, 0) rotate(var(--rot)); opacity:.1; } }
     .wrap{ position:relative; z-index:3; min-height:100%; display:grid; place-items:center; padding:20px; }
     .card{
-      width:min(1120px,95vw); min-height:82vh; border-radius:30px; background:rgba(255,255,255,.76); backdrop-filter: blur(8px);
-      border:2px dashed #ff9dcf; box-shadow:0 18px 60px rgba(202,71,144,.25); padding:20px; position:relative; overflow:hidden;
+      width:min(1160px,95vw);
+      min-height:84vh;
+      border-radius:30px;
+      background:rgba(255,255,255,.78);
+      backdrop-filter: blur(8px);
+      border:2px dashed #ff9dcf;
+      box-shadow:0 18px 60px rgba(202,71,144,.25);
+      padding:20px;
+      position:relative;
+      overflow:hidden;
     }
-    h1{ margin:0; font-size:clamp(30px,5.4vw,64px); }
+    h1{ margin:0; font-size:clamp(30px,5.2vw,62px); }
     p{ margin:8px 0 0; font-size:clamp(16px,2vw,20px); }
-    .btnRow{ margin-top:12px; display:flex; gap:10px; flex-wrap:wrap; }
-    .btn{ border:0; cursor:pointer; border-radius:999px; padding:12px 18px; font-size:17px; font-weight:900; color:#5b1f4e;
+
+    .restartWrap{
+      position:absolute;
+      top:14px;
+      right:14px;
+      z-index:5;
+    }
+    .btn{ border:0; cursor:pointer; border-radius:999px; padding:14px 22px; font-size:18px; font-weight:900; color:#5b1f4e;
       box-shadow:0 8px 20px rgba(194,69,139,.2); background:linear-gradient(135deg,#ffc3e1,#afe8ff); }
-    .playground{ position:absolute; inset:180px 12px 12px; border-radius:20px; border:1px solid #ffc7e1; background:#ffffff8e; overflow:hidden; }
-    .photo{ position:absolute; width:180px; background:#fff; border-radius:14px; padding:8px 8px 10px; box-shadow:0 12px 26px rgba(189,70,135,.24); will-change: transform; }
+
+    .playground{
+      position:absolute;
+      inset:168px 16px 16px;
+      border-radius:22px;
+      border:1px solid #ffc7e1;
+      background:#ffffff8e;
+      overflow:hidden;
+    }
+    .photo{
+      position:absolute;
+      width:clamp(150px,17vw,210px);
+      background:#fff;
+      border-radius:14px;
+      padding:8px 8px 10px;
+      box-shadow:0 12px 26px rgba(189,70,135,.24);
+      will-change: transform;
+    }
     .photo img{ width:100%; height:130px; object-fit:cover; border-radius:10px; display:block; }
     .cap{ text-align:center; font-size:12px; margin-top:5px; font-weight:700; }
-    .status{ margin-top:8px; font-weight:700; }
-    .loveToken{ position:fixed; top:-10vh; z-index:2; pointer-events:none; font-size:22px; animation: tokenFall linear forwards; opacity:.88; }
+    .loveToken{ position:fixed; top:-10vh; z-index:2; pointer-events:none; font-size:24px; animation: tokenFall linear forwards; opacity:.9; }
     @keyframes tokenFall{ to{ transform: translate3d(var(--lx), 112vh, 0) rotate(var(--lr)); opacity:.08; } }
   </style>
 </head>
@@ -43,14 +77,11 @@
   <div class="heartLayer" id="heartLayer"></div>
   <div class="wrap">
     <main class="card">
-      <h1>I am the luckiest person on earth 💞</h1>
-      <p>Thank you for saying YES, Sayang. Your yes unlocked ultimate romance arcade mode.</p>
-      <div class="btnRow">
-        <button class="btn" id="more">More hearts</button>
-        <button class="btn" id="spin">Spin photos</button>
-        <button class="btn" id="restart">Start again</button>
+      <div class="restartWrap">
+        <button class="btn" id="restart">Play again ↻</button>
       </div>
-      <div class="status" id="status">Tap buttons for extra chaos ✨</div>
+      <h1>I am the luckiest person on earth 💞</h1>
+      <p>Thank you for saying YES, Sayang. You unlocked endless hearts and dancing memories.</p>
       <section class="playground" id="playground"></section>
     </main>
   </div>
@@ -59,37 +90,68 @@
     const box=document.getElementById('playground');
     const photos=[];
     const heartLayer = document.getElementById('heartLayer');
-    const heartIcons = ['💖','💗','💘','💕','💞'];
+    const heartIcons = ['💖','💗','💘','💕','💞','❤️','🩷'];
+
     function spawnFloatHeart(){
       const h = document.createElement('span');
       h.className = 'floatHeart';
       h.textContent = heartIcons[(Math.random() * heartIcons.length) | 0];
       h.style.left = `${Math.random() * 100}%`;
-      h.style.setProperty('--dx', `${(Math.random() * 90 - 45).toFixed(1)}px`);
-      h.style.setProperty('--rot', `${(Math.random() * 100 - 50).toFixed(1)}deg`);
-      h.style.animationDuration = `${6 + Math.random() * 4}s`;
+      h.style.setProperty('--dx', `${(Math.random() * 100 - 50).toFixed(1)}px`);
+      h.style.setProperty('--rot', `${(Math.random() * 140 - 70).toFixed(1)}deg`);
+      h.style.animationDuration = `${5 + Math.random() * 3.5}s`;
       heartLayer.appendChild(h);
       h.addEventListener('animationend', ()=> h.remove(), { once:true });
     }
-    setInterval(spawnFloatHeart, 430);
+    for(let i=0;i<40;i++) setTimeout(spawnFloatHeart, i*70);
+    setInterval(spawnFloatHeart, 230);
+
     function spawnLoveToken(){
       const t = document.createElement('span');
       t.className = "loveToken";
-      t.textContent = ['🌹','💌','💞','✨'][(Math.random()*4)|0];
+      t.textContent = ['🌹','💌','💞','✨','💫','💘'][(Math.random()*6)|0];
       t.style.left = `${Math.random()*100}%`;
-      t.style.setProperty('--lx', `${(Math.random()*120-60).toFixed(1)}px`);
-      t.style.setProperty('--lr', `${(Math.random()*260-130).toFixed(1)}deg`);
-      t.style.animationDuration = `${6 + Math.random()*4}s`;
+      t.style.setProperty('--lx', `${(Math.random()*140-70).toFixed(1)}px`);
+      t.style.setProperty('--lr', `${(Math.random()*320-160).toFixed(1)}deg`);
+      t.style.animationDuration = `${7 + Math.random()*5}s`;
       document.body.appendChild(t);
       t.addEventListener('animationend', ()=>t.remove(), {once:true});
     }
-    setInterval(spawnLoveToken, 760);
-    for(let i=10;i<=20;i++){
-      const el=document.createElement('div'); el.className='photo';
-      el.innerHTML=`<img src="photos/${i}.jpeg" alt="Photo ${i}"><div class="cap">moment ${i}</div>`;
-      box.appendChild(el);
-      photos.push({el,x:Math.random()*600+40,y:Math.random()*260+20,vx:(Math.random()*.65+.35)*(Math.random()>.5?1:-1),vy:(Math.random()*.65+.35)*(Math.random()>.5?1:-1),r:Math.random()*24-12,vr:(Math.random()*.18+.05)*(Math.random()>.5?1:-1)});
+    setInterval(spawnLoveToken, 480);
+
+    function placePhotos(){
+      const rect = box.getBoundingClientRect();
+      const cols = Math.max(3, Math.floor(rect.width / 230));
+      const gapX = rect.width / cols;
+      const rows = 3;
+      const gapY = rect.height / rows;
+      let idx = 0;
+      for(let i=10;i<=20;i++){
+        const el=document.createElement('div');
+        el.className='photo';
+        el.innerHTML=`<img src="photos/${i}.jpeg" alt="Photo ${i}"><div class="cap">moment ${i}</div>`;
+        box.appendChild(el);
+
+        const c = idx % cols;
+        const r = Math.floor(idx / cols) % rows;
+        const baseX = gapX * c + gapX * 0.12 + Math.random() * 18;
+        const baseY = gapY * r + gapY * 0.14 + Math.random() * 16;
+        const phase = Math.random() * Math.PI * 2;
+        photos.push({
+          el,
+          baseX,
+          baseY,
+          ampX: 18 + Math.random()*35,
+          ampY: 16 + Math.random()*28,
+          phase,
+          drift: 0.28 + Math.random()*0.25,
+          spin: (Math.random() > 0.5 ? 1 : -1) * (0.3 + Math.random()*0.35),
+          tilt: Math.random()*14 - 7
+        });
+        idx += 1;
+      }
     }
+    placePhotos();
 
     const canvas=document.getElementById('fx');
     const ctx=canvas.getContext('2d',{alpha:true});
@@ -98,8 +160,8 @@
     function resize(){ DPR=Math.max(1,Math.min(2,devicePixelRatio||1)); W=canvas.width=Math.floor(innerWidth*DPR); H=canvas.height=Math.floor(innerHeight*DPR); }
     addEventListener('resize',resize); resize();
 
-    for(let i=0;i<90;i++) rain.push({x:rand(0,W),y:rand(-H,H),vx:rand(-.6,.6)*DPR,vy:rand(.9,2.4)*DPR,s:rand(10,20)*DPR,rot:rand(-1,1),vr:rand(-.03,.03),a:rand(.5,.96),c:`hsl(${rand(320,360)} 100% ${rand(60,76)}%)`});
-    function burst(n=130){ for(let i=0;i<n;i++) bursts.push({x:W*.5+rand(-220,220),y:H*.35+rand(-120,120),vx:rand(-3.5,3.5)*DPR,vy:rand(-4.2,-.8)*DPR,s:rand(8,15)*DPR,rot:rand(-1,1),vr:rand(-.12,.12),a:rand(.6,1),life:rand(26,70),c:`hsl(${rand(330,30)} 100% ${rand(62,76)}%)`}); }
+    for(let i=0;i<140;i++) rain.push({x:rand(0,W),y:rand(-H,H),vx:rand(-.7,.7)*DPR,vy:rand(.9,2.7)*DPR,s:rand(10,20)*DPR,rot:rand(-1,1),vr:rand(-.035,.035),a:rand(.5,.98),c:`hsl(${rand(320,360)} 100% ${rand(60,76)}%)`});
+    function burst(n=200){ for(let i=0;i<n;i++) bursts.push({x:W*.5+rand(-240,240),y:H*.35+rand(-140,120),vx:rand(-3.8,3.8)*DPR,vy:rand(-4.6,-.9)*DPR,s:rand(8,15)*DPR,rot:rand(-1,1),vr:rand(-.12,.12),a:rand(.6,1),life:rand(36,92),c:`hsl(${rand(330,30)} 100% ${rand(62,76)}%)`}); }
 
     function heart(h){
       ctx.save(); ctx.translate(h.x,h.y); ctx.rotate(h.rot); ctx.fillStyle=h.c; ctx.globalAlpha=h.a;
@@ -109,28 +171,35 @@
       ctx.restore();
     }
 
-    let spinBoost=0;
-    function tick(){
+    const loopMs = 36000;
+    const startAt = performance.now();
+    function tick(now){
       ctx.clearRect(0,0,W,H);
       for(const h of rain){ h.x+=h.vx; h.y+=h.vy; h.rot+=h.vr; if(h.y>H+60){h.y=rand(-220,-40);h.x=rand(0,W);} if(h.x<-40)h.x=W+40; if(h.x>W+40)h.x=-40; heart(h); }
-      for(let i=bursts.length-1;i>=0;i--){ const b=bursts[i]; b.x+=b.vx; b.y+=b.vy; b.vy+=.11*DPR; b.rot+=b.vr; b.life--; b.a=Math.max(0,b.life/70); heart(b); if(b.life<=0) bursts.splice(i,1); }
+      for(let i=bursts.length-1;i>=0;i--){ const b=bursts[i]; b.x+=b.vx; b.y+=b.vy; b.vy+=.11*DPR; b.rot+=b.vr; b.life--; b.a=Math.max(0,b.life/92); heart(b); if(b.life<=0) bursts.splice(i,1); }
 
-      const r=box.getBoundingClientRect();
+      const t = ((now - startAt) % loopMs) / 1000;
       for(const p of photos){
-        p.x+=p.vx; p.y+=p.vy; p.r+=p.vr + spinBoost;
-        if(p.x<0||p.x>r.width-180){ p.vx*=-1; burst(20); }
-        if(p.y<0||p.y>r.height-170){ p.vy*=-1; burst(20); }
-        p.el.style.left=`${p.x}px`; p.el.style.top=`${p.y}px`; p.el.style.transform=`translate3d(0,0,0) rotate(${p.r}deg)`;
+        const x = p.baseX + Math.sin(t * p.drift + p.phase) * p.ampX;
+        const y = p.baseY + Math.cos(t * (p.drift * 1.1) + p.phase * 0.8) * p.ampY;
+        const r = p.tilt + (now - startAt) * 0.018 * p.spin;
+        p.el.style.left=`${x}px`;
+        p.el.style.top=`${y}px`;
+        p.el.style.transform=`rotate(${r.toFixed(2)}deg)`;
       }
-      spinBoost*=0.96;
       requestAnimationFrame(tick);
     }
     requestAnimationFrame(tick);
 
-    document.getElementById('more').addEventListener('click',()=>{ burst(200); document.getElementById('status').textContent='Mega hearts deployed 💘'; });
-    document.getElementById('spin').addEventListener('click',()=>{ spinBoost+=0.8; burst(120); document.getElementById('status').textContent='Photo party spin activated 🪩'; });
-    document.getElementById('restart').addEventListener('click',()=>{ localStorage.removeItem('val_ok'); window.location.href='index.html'; });
-    burst(180);
+    setInterval(()=> burst(70), 2600);
+    document.getElementById('restart').addEventListener('click', async ()=>{
+      if (typeof window.valentineStartAudio === 'function') {
+        await window.valentineStartAudio();
+      }
+      localStorage.removeItem('val_ok');
+      window.location.href='index.html';
+    });
+    burst(260);
   </script>
 </body>
 </html>
