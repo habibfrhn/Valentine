@@ -37,6 +37,9 @@
       filter: drop-shadow(0 3px 5px rgba(255,92,162,.25));
       opacity:.9;
     }
+    @-webkit-keyframes driftDown{
+      to{ transform: translate3d(var(--dx), 112vh, 0) rotate(var(--rot)); opacity:.15; }
+    }
     @keyframes driftDown{
       to{ transform: translate3d(var(--dx), 112vh, 0) rotate(var(--rot)); opacity:.15; }
     }
@@ -118,6 +121,21 @@
     }
     .btn:hover{ transform: translateY(-3px) scale(1.05); box-shadow: 0 14px 30px rgba(191,61,138,.3); }
     .tiny{ margin-top:10px; font-size:14px; opacity:.8; }
+    .cursorLove{
+      position: fixed;
+      z-index: 4;
+      pointer-events: none;
+      font-size: 18px;
+      opacity: .9;
+      will-change: transform, opacity;
+      animation: popLove .9s ease-out forwards;
+    }
+    @-webkit-keyframes popLove{
+      to{ transform: translate3d(var(--mx), var(--my), 0) scale(.35) rotate(var(--mr)); opacity:0; }
+    }
+    @keyframes popLove{
+      to{ transform: translate3d(var(--mx), var(--my), 0) scale(.35) rotate(var(--mr)); opacity:0; }
+    }
 
     @media (prefers-reduced-motion: reduce){
       canvas#fx,.sticker{ display:none; }
@@ -162,7 +180,9 @@
 
     const heartLayer = document.getElementById('heartLayer');
     const heartIcons = ['💖','💗','💘','💕'];
+    let canFloat = !window.matchMedia || !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     function spawnFloatHeart(){
+      if(!canFloat) return;
       const h = document.createElement('span');
       h.className = 'floatHeart';
       h.textContent = heartIcons[(Math.random() * heartIcons.length) | 0];
@@ -170,10 +190,29 @@
       h.style.setProperty('--dx', `${(Math.random() * 80 - 40).toFixed(1)}px`);
       h.style.setProperty('--rot', `${(Math.random() * 80 - 40).toFixed(1)}deg`);
       h.style.animationDuration = `${6 + Math.random() * 5}s`;
+      h.style.webkitAnimationDuration = h.style.animationDuration;
       heartLayer.appendChild(h);
       h.addEventListener('animationend', ()=> h.remove(), { once:true });
+      setTimeout(()=> h.remove(), 12500);
     }
     setInterval(spawnFloatHeart, 460);
+
+    let lastSpark = 0;
+    addEventListener('pointermove', (e)=>{
+      const now = Date.now();
+      if(now - lastSpark < 90) return;
+      lastSpark = now;
+      const el = document.createElement('span');
+      el.className = 'cursorLove';
+      el.textContent = Math.random() > .5 ? '✨' : '💗';
+      el.style.left = `${e.clientX}px`;
+      el.style.top = `${e.clientY}px`;
+      el.style.setProperty('--mx', `${(Math.random()*34-17).toFixed(1)}px`);
+      el.style.setProperty('--my', `${(-18-Math.random()*30).toFixed(1)}px`);
+      el.style.setProperty('--mr', `${(Math.random()*60-30).toFixed(1)}deg`);
+      document.body.appendChild(el);
+      setTimeout(()=>el.remove(), 950);
+    }, { passive:true });
 
     const canvas = document.getElementById('fx');
     const ctx = canvas.getContext('2d', { alpha:true });
@@ -203,6 +242,7 @@
       for(let i=0;i<n;i++) bursts.push({x:W*.5+rand(-200,200),y:H*.4+rand(-100,100),vx:rand(-3,3)*DPR,vy:rand(-4,-1.3)*DPR,s:rand(8,14)*DPR,rot:rand(-1,1),vr:rand(-.12,.12),a:rand(.5,1),life:rand(28,60)});
     }
 
+    const RAF = window.requestAnimationFrame || ((cb)=> setTimeout(cb, 16));
     (function tick(){
       ctx.clearRect(0,0,W,H);
       for(const h of rain){
@@ -214,7 +254,7 @@
         const b=bursts[i]; b.x+=b.vx; b.y+=b.vy; b.vy+=.12*DPR; b.rot+=b.vr; b.life--;
         b.a=Math.max(0,b.life/60); makeHeart(b); if(b.life<=0) bursts.splice(i,1);
       }
-      requestAnimationFrame(tick);
+      RAF(tick);
     })();
   </script>
 </body>
