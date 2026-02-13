@@ -1,0 +1,218 @@
+(() => {
+  const KEY_TIME = 'valentine_audio_time';
+  const KEY_ALLOWED = 'valentine_audio_allowed';
+  const KEY_MODE = 'valentine_audio_mode';
+  const KEY_SHOULD_PLAY = 'valentine_audio_should_play';
+  const AUDIO_FILE_NAME = 'baby-blue.mp3';
+  const AUDIO_CANDIDATES = [
+    `audio/${AUDIO_FILE_NAME}`,
+    `./audio/${AUDIO_FILE_NAME}`,
+    `/audio/${AUDIO_FILE_NAME}`,
+    AUDIO_FILE_NAME
+  ];
+
+  let audio;
+  let audioCtx;
+  let activeCandidateIndex = -1;
+
+  function getLikelyProjectBasePath() {
+    const host = window.location.hostname;
+    const parts = window.location.pathname.split('/').filter(Boolean);
+    const isGithubProjectPage = host.endsWith('github.io') && parts.length > 0;
+    if (!isGithubProjectPage) return null;
+    return `/${parts[0]}`;
+  }
+
+  function getAudioCandidates() {
+    const inline = document.body?.dataset?.audioSrc || document.documentElement?.dataset?.audioSrc;
+    const fromMeta = document.querySelector('meta[name="valentine-audio-src"]')?.content;
+    const projectBase = getLikelyProjectBasePath();
+    const withProjectBase = projectBase ? `${projectBase}/audio/${AUDIO_FILE_NAME}` : null;
+    const custom = [inline, fromMeta].filter(Boolean);
+    return [...new Set([...custom, withProjectBase, ...AUDIO_CANDIDATES].filter(Boolean))];
+  }
+
+  async function isCandidateReachable(candidate) {
+    try {
+      const url = new URL(candidate, window.location.href);
+      if (url.origin !== window.location.origin) return true;
+
+      const response = await fetch(url.href, { method: 'HEAD', cache: 'no-store' });
+      if (response.ok) return true;
+      if (response.status !== 405) return false;
+
+      const fallback = await fetch(url.href, { method: 'GET', cache: 'no-store' });
+      return fallback.ok;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async function pickWorkingCandidate() {
+    const candidates = getAudioCandidates();
+    for (let index = 0; index < candidates.length; index += 1) {
+      if (await isCandidateReachable(candidates[index])) {
+        activeCandidateIndex = index;
+        return candidates[index];
+      }
+    }
+    return null;
+  }
+
+  function saveTime() {
+    if (!audio || Number.isNaN(audio.currentTime)) return;
+    try {
+      localStorage.setItem(KEY_TIME, String(audio.currentTime));
+      localStorage.setItem(KEY_SHOULD_PLAY, String(!audio.paused));
+    } catch (e) {}
+  }
+
+  function resumeTime() {
+    if (!audio) return;
+    const raw = localStorage.getItem(KEY_TIME);
+    const t = raw ? parseFloat(raw) : 0;
+    if (!Number.isFinite(t) || t < 0) return;
+    const seek = () => {
+      try { audio.currentTime = t; } catch (e) {}
+    };
+    if (audio.readyState > 0) seek();
+    else audio.addEventListener('loadedmetadata', seek, { once: true });
+  }
+
+  function ensureAudioContext() {
+    if (audioCtx) return audioCtx;
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return null;
+    audioCtx = new AudioCtx();
+    return audioCtx;
+  }
+
+  function markAllowed() {
+    try { localStorage.setItem(KEY_ALLOWED, 'yes'); } catch (e) {}
+  }
+
+  function tryAudioElementPlayback() {
+    if (!audio || !audio.src) return Promise.resolve(false);
+    return Promise.race([
+      audio.play().then(() => {
+        markAllowed();
+        try {
+          localStorage.setItem(KEY_MODE, 'file');
+          localStorage.setItem(KEY_SHOULD_PLAY, 'true');
+        } catch (e) {}
+        return true;
+      }).catch(() => false),
+      new Promise((resolve) => window.setTimeout(() => resolve(false), 700))
+    ]);
+  }
+
+  function tryPlayAudio() {
+    return tryAudioElementPlayback().then((ok) => {
+      if (!ok) {
+        try { localStorage.setItem(KEY_MODE, 'file-error'); } catch (e) {}
+      }
+      return ok;
+    });
+  }
+
+  function unlockAndPlay() {
+    const ctx = ensureAudioContext();
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+    return tryPlayAudio();
+  }
+
+  function playFromGesture() {
+    try {
+      localStorage.setItem(KEY_SHOULD_PLAY, 'true');
+      localStorage.setItem(KEY_ALLOWED, 'yes');
+    } catch (e) {}
+    return unlockAndPlay();
+  }
+
+  function handleAudioError() {
+    const candidates = getAudioCandidates();
+    const nextIndex = activeCandidateIndex + 1;
+    if (nextIndex < candidates.length) {
+      activeCandidateIndex = nextIndex;
+      audio.src = candidates[activeCandidateIndex];
+      audio.load();
+      if (shouldAutoPlay()) {
+        tryPlayAudio();
+      }
+      return;
+    }
+
+    try { localStorage.setItem(KEY_MODE, 'file-error'); } catch (e) {}
+    console.warn(`[valentine-audio] Missing audio file. Tried: ${candidates.join(', ')}. Expected file name: ${AUDIO_FILE_NAME}.`);
+    markAllowed();
+  }
+
+  function shouldAutoPlay() {
+    const shouldPlay = localStorage.getItem(KEY_SHOULD_PLAY);
+    return shouldPlay !== 'false';
+  }
+
+  async function init() {
+    audio = document.createElement('audio');
+    audio.id = 'global-romance-audio';
+    audio.loop = true;
+    audio.preload = 'auto';
+    audio.autoplay = true;
+    audio.setAttribute('playsinline', '');
+    audio.style.display = 'none';
+
+    audio.addEventListener('error', handleAudioError);
+    audio.addEventListener('stalled', handleAudioError);
+    audio.addEventListener('suspend', () => {
+      if (audio.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) handleAudioError();
+    });
+
+    document.body.appendChild(audio);
+
+    const source = await pickWorkingCandidate();
+    if (source) {
+      audio.src = source;
+      audio.load();
+      resumeTime();
+    } else {
+      try { localStorage.setItem(KEY_MODE, 'file-error'); } catch (e) {}
+      console.warn(`[valentine-audio] Missing audio file. Tried: ${getAudioCandidates().join(', ')}. Expected file name: ${AUDIO_FILE_NAME}.`);
+      markAllowed();
+      return;
+    }
+
+    if (localStorage.getItem(KEY_ALLOWED) === 'yes') {
+      unlockAndPlay();
+    }
+
+    const unlockEvents = ['pointerdown', 'touchstart', 'keydown', 'click'];
+    unlockEvents.forEach((evt) => {
+      window.addEventListener(evt, unlockAndPlay);
+    });
+
+    window.valentineStartAudio = playFromGesture;
+
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && shouldAutoPlay()) unlockAndPlay();
+    });
+
+    window.addEventListener('pageshow', () => {
+      if (shouldAutoPlay()) unlockAndPlay();
+    });
+
+    window.addEventListener('pagehide', saveTime);
+    window.addEventListener('beforeunload', saveTime);
+    audio.addEventListener('timeupdate', () => {
+      if (Math.random() < 0.12) saveTime();
+    });
+    audio.addEventListener('pause', saveTime);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init, { once: true });
+  } else {
+    init();
+  }
+})();
