@@ -3,9 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <link rel="stylesheet" href="heart-effects.css" />
-  <script defer src="heart-effects.js"></script>
-  <title>Check</title>
+    <title>Check</title>
+  <script defer src="audio-player.js"></script>
   <style>
     :root{
       --blue:#9fd3ff;
@@ -123,6 +122,9 @@
       0%,100%{ transform: translate3d(0,0,0) rotate(var(--r)); }
       50%{ transform: translate3d(0,-10px,0) rotate(calc(var(--r) + 1deg)); }
     }
+    .blossom{ position:fixed; top:-12vh; z-index:2; pointer-events:none; font-size: clamp(18px, 2.3vw, 30px); opacity:.86; animation: blossomFall linear forwards; }
+    @keyframes blossomFall{ to{ transform: translate3d(var(--bx), 112vh, 0) rotate(var(--br)); opacity:.06; } }
+
     .kissPop{
       position: fixed;
       z-index: 9;
@@ -321,6 +323,19 @@
         setTimeout(()=> ctx.close(), 420);
       }catch(e){}
     }
+
+    function spawnBlossom(){
+      const b = document.createElement('span');
+      b.className = "blossom";
+      b.textContent = Math.random() > 0.45 ? "🌹" : "💮";
+      b.style.left = `${Math.random()*100}%`;
+      b.style.setProperty('--bx', `${(Math.random()*120-60).toFixed(1)}px`);
+      b.style.setProperty('--br', `${(Math.random()*220-110).toFixed(1)}deg`);
+      b.style.animationDuration = `${6 + Math.random()*5}s`;
+      document.body.appendChild(b);
+      b.addEventListener('animationend',()=>b.remove(),{once:true});
+    }
+    setInterval(spawnBlossom, 820);
 
     const canvas = document.getElementById('fx');
     const ctx = canvas.getContext('2d', { alpha:true });

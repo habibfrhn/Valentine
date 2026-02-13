@@ -3,9 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <link rel="stylesheet" href="heart-effects.css" />
-  <script defer src="heart-effects.js"></script>
-  <title>The Question</title>
+    <title>The Question</title>
+  <script defer src="audio-player.js"></script>
   <style>
     *{ box-sizing:border-box; }
     html,body{ height:100%; }
@@ -78,7 +77,10 @@
     .btn:hover{ transform:translateY(-4px) scale(1.06); box-shadow:0 16px 30px rgba(191,61,138,.3); }
     .yes{ background:linear-gradient(135deg,#ffbde0,#a8e7ff); color:#5b1f4e; }
     .no{ background:#fff; margin-left:10px; color:#5b1f4e; }
-    .no.flee{ position:absolute; left:var(--nx); top:var(--ny); transform:translate(-50%,-50%) rotate(var(--nr)); }
+    .no.flee{ position:absolute; left:var(--nx); top:var(--ny); transform:translate(-50%,-50%) rotate(var(--nr)); transition: left .24s cubic-bezier(.2,.8,.2,1), top .24s cubic-bezier(.2,.8,.2,1), transform .24s ease; }
+
+    .roseTrail{ position:fixed; z-index:6; pointer-events:none; font-size:20px; animation: riseTrail 900ms ease-out forwards; }
+    @keyframes riseTrail{ to{ transform: translate3d(var(--tx), var(--ty), 0) rotate(var(--tr)); opacity:0; } }
 
     .mini{ margin-top:10px; font-size:14px; opacity:.8; }
 
@@ -173,14 +175,16 @@
       noCount++;
       dodgeNo();
       sprinkle(20 + noCount * 8);
-      if(noCount===1){ noteBody.textContent='Aww. The No button got shy and started running.'; mini.textContent='It only accepts cardio mode now.'; no.addEventListener('mouseenter', dodgeNo); }
-      else if(noCount===2){ noteBody.textContent='Second no?! It unlocked turbo dodge.'; mini.textContent='No button now has anime reflexes.'; }
-      else if(noCount===3){ noteBody.textContent='Okay this is funny. It is panicking in cute mode.'; mini.textContent='Every no makes YES bigger 👀'; }
+      if(noCount===1){ noteBody.textContent='Aww. The No button got shy and started running.'; mini.textContent='No runs away every time you tap it now.'; }
+      else if(noCount===2){ noteBody.textContent='Second no?! It unlocked turbo dodge.'; mini.textContent='YES grows stronger every no 💪💘'; }
+      else if(noCount===3){ noteBody.textContent='Okay this is funny. It is panicking in cute mode.'; mini.textContent='No is in random mode. Catch it if you can.'; }
       else { noteBody.textContent='No button says: I surrender. Please press YES 🥹'; mini.textContent='Maximum silliness reached.'; no.textContent='still no?'; }
-      yesScale = Math.min(2.1, yesScale + 0.13);
+      yesScale = Math.min(2.6, yesScale + 0.18);
       yes.style.transform=`scale(${yesScale})`;
       yes.animate([{ transform:`scale(${yesScale - 0.08})` },{ transform:`scale(${yesScale})` }],{duration:320, easing:'cubic-bezier(.2,.8,.2,1)'});
     });
+
+    no.addEventListener('pointerenter', ()=>{ if(noCount > 0) dodgeNo(); });
 
     function dodgeNo(){
       const rect=stage.getBoundingClientRect();
@@ -190,14 +194,27 @@
       no.style.setProperty('--nx',`${x}px`);
       no.style.setProperty('--ny',`${y}px`);
       no.style.setProperty('--nr',`${(Math.random()*36-18).toFixed(1)}deg`);
-      if(noCount > 1){ setTimeout(() => noCount && dodgeNo(), 210); }
+      makeRoseTrail(rect.left + x, rect.top + y);
+    }
+
+    function makeRoseTrail(x, y){
+      const t = document.createElement('span');
+      t.className = "roseTrail";
+      t.textContent = Math.random() > 0.5 ? "🌹" : "💖";
+      t.style.left = `${x}px`;
+      t.style.top = `${y}px`;
+      t.style.setProperty('--tx', `${(Math.random()*50-25).toFixed(1)}px`);
+      t.style.setProperty('--ty', `${(-26-Math.random()*34).toFixed(1)}px`);
+      t.style.setProperty('--tr', `${(Math.random()*140-70).toFixed(1)}deg`);
+      document.body.appendChild(t);
+      setTimeout(()=>t.remove(), 950);
     }
 
     yes.addEventListener('click', ()=>{
       yes.disabled=true; no.disabled=true;
       noteBody.textContent='YESSS! initiating romantic celebration mode ✨';
       mini.textContent='Launching hearts, sparkles, and happy chaos.';
-      burst(220);
+      burst(340);
       setTimeout(()=> window.location.href='yes.html', 1250);
     });
 

@@ -3,9 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <link rel="stylesheet" href="heart-effects.css" />
-  <script defer src="heart-effects.js"></script>
-  <title>For Shana</title>
+    <title>For Shana</title>
+  <script defer src="audio-player.js"></script>
   <style>
     :root{
       --ink:#4b2a49;
@@ -137,6 +136,20 @@
       to{ transform: translate3d(var(--mx), var(--my), 0) scale(.35) rotate(var(--mr)); opacity:0; }
     }
 
+    .rosePetal{
+      position:fixed;
+      top:-12vh;
+      z-index:2;
+      pointer-events:none;
+      font-size: clamp(18px, 2.2vw, 28px);
+      opacity:.82;
+      animation: petalFall linear forwards;
+      will-change: transform;
+    }
+    @keyframes petalFall{
+      to{ transform: translate3d(var(--rx), 114vh, 0) rotate(var(--rr)); opacity:.1; }
+    }
+
     @media (prefers-reduced-motion: reduce){
       canvas#fx,.sticker{ display:none; }
       *{ transition:none !important; animation:none !important; }
@@ -156,8 +169,7 @@
   <div class="wrap">
     <main class="card">
       <h1>Happy Valentine Sayang 💌</h1>
-      <p>I made this page super cute for you. Tap the button and let the love chaos begin.</p>
-
+      
       <div class="row">
         <div>
           <div class="ctaRow"><button class="btn" id="start">Open the surprise</button></div>
@@ -196,6 +208,21 @@
       setTimeout(()=> h.remove(), 12500);
     }
     setInterval(spawnFloatHeart, 460);
+
+    function spawnPetal(){
+      if(!canFloat) return;
+      const p = document.createElement('span');
+      p.className = "rosePetal";
+      p.textContent = Math.random() > 0.5 ? "🌹" : "🌸";
+      p.style.left = `${Math.random() * 100}%`;
+      p.style.setProperty('--rx', `${(Math.random() * 140 - 70).toFixed(1)}px`);
+      p.style.setProperty('--rr', `${(Math.random() * 200 - 100).toFixed(1)}deg`);
+      p.style.animationDuration = `${7 + Math.random() * 5}s`;
+      document.body.appendChild(p);
+      p.addEventListener('animationend', ()=> p.remove(), { once:true });
+      setTimeout(()=> p.remove(), 13000);
+    }
+    setInterval(spawnPetal, 720);
 
     let lastSpark = 0;
     addEventListener('pointermove', (e)=>{

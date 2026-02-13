@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Yes</title>
+  <script defer src="audio-player.js"></script>
   <style>
     *{ box-sizing:border-box; }
     html,body{ height:100%; }
@@ -30,6 +31,8 @@
     .photo img{ width:100%; height:130px; object-fit:cover; border-radius:10px; display:block; }
     .cap{ text-align:center; font-size:12px; margin-top:5px; font-weight:700; }
     .status{ margin-top:8px; font-weight:700; }
+    .loveToken{ position:fixed; top:-10vh; z-index:2; pointer-events:none; font-size:22px; animation: tokenFall linear forwards; opacity:.88; }
+    @keyframes tokenFall{ to{ transform: translate3d(var(--lx), 112vh, 0) rotate(var(--lr)); opacity:.08; } }
   </style>
 </head>
 <body>
@@ -69,6 +72,18 @@
       h.addEventListener('animationend', ()=> h.remove(), { once:true });
     }
     setInterval(spawnFloatHeart, 430);
+    function spawnLoveToken(){
+      const t = document.createElement('span');
+      t.className = "loveToken";
+      t.textContent = ['🌹','💌','💞','✨'][(Math.random()*4)|0];
+      t.style.left = `${Math.random()*100}%`;
+      t.style.setProperty('--lx', `${(Math.random()*120-60).toFixed(1)}px`);
+      t.style.setProperty('--lr', `${(Math.random()*260-130).toFixed(1)}deg`);
+      t.style.animationDuration = `${6 + Math.random()*4}s`;
+      document.body.appendChild(t);
+      t.addEventListener('animationend', ()=>t.remove(), {once:true});
+    }
+    setInterval(spawnLoveToken, 760);
     for(let i=10;i<=20;i++){
       const el=document.createElement('div'); el.className='photo';
       el.innerHTML=`<img src="photos/${i}.jpeg" alt="Photo ${i}"><div class="cap">moment ${i}</div>`;
