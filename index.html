@@ -189,9 +189,9 @@
   </div>
 
   <script>
-    document.getElementById('start').addEventListener('click', async ()=>{
+    document.getElementById('start').addEventListener('click', ()=>{
       if (typeof window.valentineStartAudio === 'function') {
-        await window.valentineStartAudio();
+        window.valentineStartAudio().catch(() => {});
       }
       burst(90);
       setTimeout(()=> window.location.href = "verify.html", 520);

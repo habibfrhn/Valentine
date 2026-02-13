@@ -259,7 +259,7 @@
       b.style.background=c;
       const s=document.createElement('div'); s.className='shine'; b.appendChild(s);
 
-      b.addEventListener('click', async ()=>{
+      b.addEventListener('click', ()=>{
         const isBlue = (c === BLUE);
         if(!isBlue){
           wobble(b);
@@ -267,7 +267,7 @@
           return;
         }
         if (typeof window.valentineStartAudio === 'function') {
-          await window.valentineStartAudio();
+          window.valentineStartAudio().catch(() => {});
         }
         localStorage.setItem("val_ok","yes");
         gentleChime();

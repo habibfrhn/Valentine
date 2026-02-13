@@ -42,14 +42,17 @@
 
   function tryAudioElementPlayback() {
     if (!audio) return Promise.resolve(false);
-    return audio.play().then(() => {
-      markAllowed();
-      try {
-        localStorage.setItem(KEY_MODE, 'file');
-        localStorage.setItem(KEY_SHOULD_PLAY, 'true');
-      } catch (e) {}
-      return true;
-    }).catch(() => false);
+    return Promise.race([
+      audio.play().then(() => {
+        markAllowed();
+        try {
+          localStorage.setItem(KEY_MODE, 'file');
+          localStorage.setItem(KEY_SHOULD_PLAY, 'true');
+        } catch (e) {}
+        return true;
+      }).catch(() => false),
+      new Promise((resolve) => window.setTimeout(() => resolve(false), 700))
+    ]);
   }
 
   function tryPlayAudio() {
@@ -82,6 +85,15 @@
     markAllowed();
   }
 
+  function checkAudioAsset() {
+    return fetch(AUDIO_SRC, { method: 'HEAD', cache: 'no-store' }).then((res) => {
+      if (!res.ok) {
+        console.warn(`[valentine-audio] Missing audio file at ${AUDIO_SRC}.`);
+        try { localStorage.setItem(KEY_MODE, 'file-missing'); } catch (e) {}
+      }
+    }).catch(() => {});
+  }
+
   function shouldAutoPlay() {
     const shouldPlay = localStorage.getItem(KEY_SHOULD_PLAY);
     return shouldPlay !== 'false';
@@ -96,10 +108,7 @@
     audio.setAttribute('playsinline', '');
     audio.style.display = 'none';
 
-    const source = document.createElement('source');
-    source.src = AUDIO_SRC;
-    source.type = 'audio/mpeg';
-    audio.appendChild(source);
+    audio.src = AUDIO_SRC;
 
     audio.addEventListener('error', handleAudioError);
     audio.addEventListener('stalled', handleAudioError);
@@ -109,6 +118,7 @@
 
     document.body.appendChild(audio);
 
+    checkAudioAsset();
     resumeTime();
     if (shouldAutoPlay()) {
       tryPlayAudio();

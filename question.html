@@ -216,9 +216,9 @@
       setTimeout(()=>t.remove(), 950);
     }
 
-    yes.addEventListener('click', async ()=>{
+    yes.addEventListener('click', ()=>{
       if (typeof window.valentineStartAudio === 'function') {
-        await window.valentineStartAudio();
+        window.valentineStartAudio().catch(() => {});
       }
       yes.disabled=true; no.disabled=true;
       noteBody.textContent='YESSS! initiating romantic celebration mode ✨';

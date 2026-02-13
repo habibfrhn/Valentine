@@ -192,9 +192,9 @@
     requestAnimationFrame(tick);
 
     setInterval(()=> burst(70), 2600);
-    document.getElementById('restart').addEventListener('click', async ()=>{
+    document.getElementById('restart').addEventListener('click', ()=>{
       if (typeof window.valentineStartAudio === 'function') {
-        await window.valentineStartAudio();
+        window.valentineStartAudio().catch(() => {});
       }
       localStorage.removeItem('val_ok');
       window.location.href='index.html';
