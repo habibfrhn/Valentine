@@ -1,206 +1,156 @@
 (() => {
   const KEY_TIME = 'valentine_audio_time';
-  const KEY_ALLOWED = 'valentine_audio_allowed';
-  const KEY_MODE = 'valentine_audio_mode';
-  const KEY_SHOULD_PLAY = 'valentine_audio_should_play';
-  const AUDIO_FILE_NAMES = ['baby-blue.mp3', 'baby-blue.wav'];
+  const KEY_ENABLED = 'valentine_audio_enabled';
+  const KEY_INTENT = 'valentine_audio_intent';
+  const AUDIO_FILES = ['audio/baby-blue.mp3', 'audio/baby-blue.wav'];
 
-  let audio;
-  let activeCandidateIndex = -1;
+  let audio = null;
+  let srcIndex = 0;
 
-  function getLikelyProjectBasePath() {
+  function pickProjectPrefixedCandidates() {
     const host = window.location.hostname;
     const parts = window.location.pathname.split('/').filter(Boolean);
     const isGithubProjectPage = host.endsWith('github.io') && parts.length > 0;
-    if (!isGithubProjectPage) return null;
-    return `/${parts[0]}`;
+    const prefix = isGithubProjectPage ? `/${parts[0]}/` : '/';
+
+    const defaults = AUDIO_FILES.flatMap((file) => [
+      `${prefix}${file}`,
+      `./${file}`,
+      file
+    ]);
+
+    const customFromBody = document.body?.dataset?.audioSrc;
+    const customFromHtml = document.documentElement?.dataset?.audioSrc;
+    const customFromMeta = document.querySelector('meta[name="valentine-audio-src"]')?.content;
+
+    return [...new Set([customFromBody, customFromHtml, customFromMeta, ...defaults].filter(Boolean))];
   }
 
-  function getDefaultAudioCandidates() {
-    const projectBase = getLikelyProjectBasePath();
-    return AUDIO_FILE_NAMES.flatMap((fileName) => {
-      const paths = [
-        `audio/${fileName}`,
-        `./audio/${fileName}`,
-        `/audio/${fileName}`,
-        fileName
-      ];
-      if (projectBase) paths.unshift(`${projectBase}/audio/${fileName}`);
-      return paths;
-    });
+  function shouldKeepPlaying() {
+    return localStorage.getItem(KEY_INTENT) !== 'false';
   }
 
-  function getAudioCandidates() {
-    const inline = document.body?.dataset?.audioSrc || document.documentElement?.dataset?.audioSrc;
-    const fromMeta = document.querySelector('meta[name="valentine-audio-src"]')?.content;
-    const custom = [inline, fromMeta].filter(Boolean);
-    return [...new Set([...custom, ...getDefaultAudioCandidates()].filter(Boolean))];
-  }
+  function savePlaybackState() {
+    if (!audio || Number.isNaN(audio.currentTime)) return;
 
-  async function isCandidateReachable(candidate) {
     try {
-      const url = new URL(candidate, window.location.href);
-      if (url.origin !== window.location.origin) return true;
+      localStorage.setItem(KEY_TIME, String(audio.currentTime));
+      localStorage.setItem(KEY_INTENT, String(!audio.paused));
+    } catch (error) {
+      // ignore storage failures
+    }
+  }
 
-      const response = await fetch(url.href, { method: 'HEAD', cache: 'no-store' });
-      if (response.ok) return true;
-      if (response.status !== 405) return false;
+  function restorePlaybackPosition() {
+    if (!audio) return;
 
-      const fallback = await fetch(url.href, { method: 'GET', cache: 'no-store' });
-      return fallback.ok;
-    } catch (e) {
+    const saved = parseFloat(localStorage.getItem(KEY_TIME) || '0');
+    if (!Number.isFinite(saved) || saved <= 0) return;
+
+    const seek = () => {
+      try {
+        audio.currentTime = saved;
+      } catch (error) {
+        // ignore seek issues
+      }
+    };
+
+    if (audio.readyState > 0) {
+      seek();
+    } else {
+      audio.addEventListener('loadedmetadata', seek, { once: true });
+    }
+  }
+
+  function setSource(index) {
+    const candidates = pickProjectPrefixedCandidates();
+    if (index >= candidates.length) return false;
+
+    srcIndex = index;
+    audio.src = candidates[index];
+    audio.load();
+    return true;
+  }
+
+  async function playIfPossible() {
+    if (!audio || !audio.src) return false;
+
+    try {
+      await audio.play();
+      localStorage.setItem(KEY_ENABLED, 'yes');
+      localStorage.setItem(KEY_INTENT, 'true');
+      return true;
+    } catch (error) {
       return false;
     }
   }
 
-  async function pickWorkingCandidate() {
-    const candidates = getAudioCandidates();
-    for (let index = 0; index < candidates.length; index += 1) {
-      if (await isCandidateReachable(candidates[index])) {
-        activeCandidateIndex = index;
-        return candidates[index];
-      }
-    }
-    return null;
+  async function startFromGesture() {
+    localStorage.setItem(KEY_ENABLED, 'yes');
+    localStorage.setItem(KEY_INTENT, 'true');
+    return playIfPossible();
   }
 
-  function saveTime() {
-    if (!audio || Number.isNaN(audio.currentTime)) return;
-    try {
-      localStorage.setItem(KEY_TIME, String(audio.currentTime));
-      localStorage.setItem(KEY_SHOULD_PLAY, String(!audio.paused));
-    } catch (e) {}
-  }
-
-  function resumeTime() {
-    if (!audio) return;
-    const raw = localStorage.getItem(KEY_TIME);
-    const t = raw ? parseFloat(raw) : 0;
-    if (!Number.isFinite(t) || t < 0) return;
-    const seek = () => {
-      try { audio.currentTime = t; } catch (e) {}
+  function attachGestureUnlock() {
+    const events = ['pointerdown', 'click', 'touchstart', 'keydown'];
+    const onceHandler = () => {
+      startFromGesture().finally(() => {
+        events.forEach((eventName) => window.removeEventListener(eventName, onceHandler, true));
+      });
     };
-    if (audio.readyState > 0) seek();
-    else audio.addEventListener('loadedmetadata', seek, { once: true });
+
+    events.forEach((eventName) => window.addEventListener(eventName, onceHandler, { capture: true, once: false }));
   }
 
-  function markAllowed() {
-    try { localStorage.setItem(KEY_ALLOWED, 'yes'); } catch (e) {}
-  }
-
-  function tryAudioElementPlayback() {
-    if (!audio || !audio.src) return Promise.resolve(false);
-    return Promise.race([
-      audio.play().then(() => {
-        markAllowed();
-        try {
-          localStorage.setItem(KEY_MODE, 'file');
-          localStorage.setItem(KEY_SHOULD_PLAY, 'true');
-        } catch (e) {}
-        return true;
-      }).catch(() => false),
-      new Promise((resolve) => window.setTimeout(() => resolve(false), 700))
-    ]);
-  }
-
-  function tryPlayAudio() {
-    return tryAudioElementPlayback().then((ok) => {
-      if (!ok) {
-        try { localStorage.setItem(KEY_MODE, 'file-error'); } catch (e) {}
-      }
-      return ok;
-    });
-  }
-
-  function unlockAndPlay() {
-    return tryPlayAudio();
-  }
-
-  function playFromGesture() {
-    try {
-      localStorage.setItem(KEY_SHOULD_PLAY, 'true');
-      localStorage.setItem(KEY_ALLOWED, 'yes');
-    } catch (e) {}
-    return unlockAndPlay();
-  }
-
-  function handleAudioError() {
-    const candidates = getAudioCandidates();
-    const nextIndex = activeCandidateIndex + 1;
-    if (nextIndex < candidates.length) {
-      activeCandidateIndex = nextIndex;
-      audio.src = candidates[activeCandidateIndex];
-      audio.load();
-      if (shouldAutoPlay()) {
-        tryPlayAudio();
-      }
-      return;
-    }
-
-    try { localStorage.setItem(KEY_MODE, 'file-error'); } catch (e) {}
-    console.warn(`[valentine-audio] Missing audio file. Tried: ${candidates.join(', ')}. Expected file name: ${AUDIO_FILE_NAMES.join(' or ')}.`);
-    markAllowed();
-  }
-
-  function shouldAutoPlay() {
-    const shouldPlay = localStorage.getItem(KEY_SHOULD_PLAY);
-    return shouldPlay !== 'false';
-  }
-
-  async function init() {
+  function initAudioElement() {
     audio = document.createElement('audio');
     audio.id = 'global-romance-audio';
-    audio.loop = true;
     audio.preload = 'auto';
-    audio.autoplay = true;
-    audio.setAttribute('playsinline', '');
+    audio.loop = true;
+    audio.playsInline = true;
     audio.style.display = 'none';
 
-    audio.addEventListener('error', handleAudioError);
-    audio.addEventListener('stalled', handleAudioError);
-    audio.addEventListener('suspend', () => {
-      if (audio.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) handleAudioError();
+    audio.addEventListener('error', () => {
+      const moved = setSource(srcIndex + 1);
+      if (moved && shouldKeepPlaying()) {
+        playIfPossible();
+      }
+    });
+
+    audio.addEventListener('pause', savePlaybackState);
+    audio.addEventListener('timeupdate', () => {
+      if (Math.random() < 0.1) savePlaybackState();
     });
 
     document.body.appendChild(audio);
+    setSource(0);
+    restorePlaybackPosition();
+  }
 
-    const source = await pickWorkingCandidate();
-    if (source) {
-      audio.src = source;
-      audio.load();
-      resumeTime();
-    } else {
-      try { localStorage.setItem(KEY_MODE, 'file-error'); } catch (e) {}
-      console.warn(`[valentine-audio] Missing audio file. Tried: ${getAudioCandidates().join(', ')}. Expected file name: ${AUDIO_FILE_NAMES.join(' or ')}.`);
-      markAllowed();
-      return;
+  function init() {
+    initAudioElement();
+    attachGestureUnlock();
+
+    if (localStorage.getItem(KEY_ENABLED) === 'yes' && shouldKeepPlaying()) {
+      playIfPossible();
     }
 
-    if (localStorage.getItem(KEY_ALLOWED) === 'yes') {
-      unlockAndPlay();
-    }
-
-    const unlockEvents = ['pointerdown', 'touchstart', 'keydown', 'click'];
-    unlockEvents.forEach((evt) => {
-      window.addEventListener(evt, unlockAndPlay);
-    });
-
-    window.valentineStartAudio = playFromGesture;
+    window.valentineStartAudio = startFromGesture;
 
     document.addEventListener('visibilitychange', () => {
-      if (!document.hidden && shouldAutoPlay()) unlockAndPlay();
+      if (!document.hidden && shouldKeepPlaying()) {
+        playIfPossible();
+      }
     });
 
     window.addEventListener('pageshow', () => {
-      if (shouldAutoPlay()) unlockAndPlay();
+      if (shouldKeepPlaying()) {
+        playIfPossible();
+      }
     });
 
-    window.addEventListener('pagehide', saveTime);
-    window.addEventListener('beforeunload', saveTime);
-    audio.addEventListener('timeupdate', () => {
-      if (Math.random() < 0.12) saveTime();
-    });
-    audio.addEventListener('pause', saveTime);
+    window.addEventListener('beforeunload', savePlaybackState);
+    window.addEventListener('pagehide', savePlaybackState);
   }
 
   if (document.readyState === 'loading') {
