@@ -6,24 +6,13 @@
 }
 
 .heart-rain{
-<<<<<<< HEAD
-  z-index: 1;
-=======
   z-index: 4;
->>>>>>> codex/enhance-website-with-animations-for-valentine-q90r5u
   overflow: hidden;
 }
 
 .drop-heart{
   position: absolute;
   top: -12vh;
-<<<<<<< HEAD
-  color: rgba(255, 255, 255, 0.7);
-  text-shadow: 0 0 16px rgba(255, 145, 185, 0.55);
-  animation-name: heartFall;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-=======
   color: #ff4f93;
   text-shadow:
     0 0 14px rgba(255, 80, 150, 0.7),
@@ -32,61 +21,28 @@
   animation-timing-function: linear;
   animation-iteration-count: infinite;
   user-select: none;
->>>>>>> codex/enhance-website-with-animations-for-valentine-q90r5u
 }
 
 @keyframes heartFall {
   0% {
-<<<<<<< HEAD
-    transform: translate3d(0, -10vh, 0) rotate(0deg) scale(1);
-    opacity: 0;
-  }
-  10% { opacity: 0.85; }
-  100% {
-    transform: translate3d(var(--drift, 0px), 110vh, 0) rotate(240deg) scale(1.08);
-=======
     transform: translate3d(0, -10vh, 0) rotate(0deg) scale(0.9);
     opacity: 0;
   }
   10% { opacity: 0.9; }
   100% {
     transform: translate3d(var(--drift, 0px), 110vh, 0) rotate(280deg) scale(1.15);
->>>>>>> codex/enhance-website-with-animations-for-valentine-q90r5u
     opacity: 0;
   }
 }
 
 .orbit-heart{
-<<<<<<< HEAD
-  z-index: 1;
-=======
   z-index: 4;
->>>>>>> codex/enhance-website-with-animations-for-valentine-q90r5u
 }
 
 .orbit-heart .heart-core{
   position: absolute;
   left: 0;
   top: 0;
-<<<<<<< HEAD
-  width: 44px;
-  height: 44px;
-  border-radius: 999px;
-  display: grid;
-  place-items: center;
-  font-size: 24px;
-  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95), rgba(255,191,212,0.9));
-  box-shadow: 0 0 24px rgba(255, 144, 182, 0.45);
-  opacity: 0.95;
-  transform: translate(-50%, -50%);
-}
-
-@media (prefers-reduced-motion: reduce){
-  .heart-rain,
-  .orbit-heart{
-    display:none;
-  }
-=======
   width: 52px;
   height: 52px;
   border-radius: 999px;
@@ -110,5 +66,4 @@
 
 .orbit-heart.reduced .heart-core{
   animation: none;
->>>>>>> codex/enhance-website-with-animations-for-valentine-q90r5u
 }
