@@ -3,22 +3,33 @@
   const KEY_ALLOWED = 'valentine_audio_allowed';
   const KEY_MODE = 'valentine_audio_mode';
   const KEY_SHOULD_PLAY = 'valentine_audio_should_play';
+  const AUDIO_FILE_NAME = 'baby-blue.mp3';
   const AUDIO_CANDIDATES = [
-    'audio/baby-blue.mp3',
-    './audio/baby-blue.mp3',
-    '/audio/baby-blue.mp3',
-    'baby-blue.mp3'
+    `audio/${AUDIO_FILE_NAME}`,
+    `./audio/${AUDIO_FILE_NAME}`,
+    `/audio/${AUDIO_FILE_NAME}`,
+    AUDIO_FILE_NAME
   ];
 
   let audio;
   let audioCtx;
   let activeCandidateIndex = -1;
 
+  function getLikelyProjectBasePath() {
+    const host = window.location.hostname;
+    const parts = window.location.pathname.split('/').filter(Boolean);
+    const isGithubProjectPage = host.endsWith('github.io') && parts.length > 0;
+    if (!isGithubProjectPage) return null;
+    return `/${parts[0]}`;
+  }
+
   function getAudioCandidates() {
     const inline = document.body?.dataset?.audioSrc || document.documentElement?.dataset?.audioSrc;
     const fromMeta = document.querySelector('meta[name="valentine-audio-src"]')?.content;
+    const projectBase = getLikelyProjectBasePath();
+    const withProjectBase = projectBase ? `${projectBase}/audio/${AUDIO_FILE_NAME}` : null;
     const custom = [inline, fromMeta].filter(Boolean);
-    return [...new Set([...custom, ...AUDIO_CANDIDATES])];
+    return [...new Set([...custom, withProjectBase, ...AUDIO_CANDIDATES].filter(Boolean))];
   }
 
   async function isCandidateReachable(candidate) {
@@ -134,7 +145,7 @@
     }
 
     try { localStorage.setItem(KEY_MODE, 'file-error'); } catch (e) {}
-    console.warn(`[valentine-audio] Missing audio file. Tried: ${candidates.join(', ')}.`);
+    console.warn(`[valentine-audio] Missing audio file. Tried: ${candidates.join(', ')}. Expected file name: ${AUDIO_FILE_NAME}.`);
     markAllowed();
   }
 
@@ -167,7 +178,7 @@
       resumeTime();
     } else {
       try { localStorage.setItem(KEY_MODE, 'file-error'); } catch (e) {}
-      console.warn(`[valentine-audio] Missing audio file. Tried: ${getAudioCandidates().join(', ')}.`);
+      console.warn(`[valentine-audio] Missing audio file. Tried: ${getAudioCandidates().join(', ')}. Expected file name: ${AUDIO_FILE_NAME}.`);
       markAllowed();
       return;
     }
