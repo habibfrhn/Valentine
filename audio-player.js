@@ -21,6 +21,33 @@
     return [...new Set([...custom, ...AUDIO_CANDIDATES])];
   }
 
+  async function isCandidateReachable(candidate) {
+    try {
+      const url = new URL(candidate, window.location.href);
+      if (url.origin !== window.location.origin) return true;
+
+      const response = await fetch(url.href, { method: 'HEAD', cache: 'no-store' });
+      if (response.ok) return true;
+      if (response.status !== 405) return false;
+
+      const fallback = await fetch(url.href, { method: 'GET', cache: 'no-store' });
+      return fallback.ok;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async function pickWorkingCandidate() {
+    const candidates = getAudioCandidates();
+    for (let index = 0; index < candidates.length; index += 1) {
+      if (await isCandidateReachable(candidates[index])) {
+        activeCandidateIndex = index;
+        return candidates[index];
+      }
+    }
+    return null;
+  }
+
   function saveTime() {
     if (!audio || Number.isNaN(audio.currentTime)) return;
     try {
@@ -54,7 +81,7 @@
   }
 
   function tryAudioElementPlayback() {
-    if (!audio) return Promise.resolve(false);
+    if (!audio || !audio.src) return Promise.resolve(false);
     return Promise.race([
       audio.play().then(() => {
         markAllowed();
@@ -116,7 +143,7 @@
     return shouldPlay !== 'false';
   }
 
-  function init() {
+  async function init() {
     audio = document.createElement('audio');
     audio.id = 'global-romance-audio';
     audio.loop = true;
@@ -133,9 +160,17 @@
 
     document.body.appendChild(audio);
 
-    activeCandidateIndex = -1;
-    handleAudioError();
-    resumeTime();
+    const source = await pickWorkingCandidate();
+    if (source) {
+      audio.src = source;
+      audio.load();
+      resumeTime();
+    } else {
+      try { localStorage.setItem(KEY_MODE, 'file-error'); } catch (e) {}
+      console.warn(`[valentine-audio] Missing audio file. Tried: ${getAudioCandidates().join(', ')}.`);
+      markAllowed();
+      return;
+    }
 
     if (localStorage.getItem(KEY_ALLOWED) === 'yes') {
       unlockAndPlay();
