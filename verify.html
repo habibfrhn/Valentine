@@ -124,6 +124,9 @@
     }
     .blossom{ position:fixed; top:-12vh; z-index:2; pointer-events:none; font-size: clamp(18px, 2.3vw, 30px); opacity:.86; animation: blossomFall linear forwards; }
     @keyframes blossomFall{ to{ transform: translate3d(var(--bx), 112vh, 0) rotate(var(--br)); opacity:.06; } }
+    .floatIcon{ position:fixed; top:-12vh; z-index:2; pointer-events:none; font-size: clamp(20px, 2.7vw, 34px); opacity:.88; animation: iconFall linear forwards; }
+    @-webkit-keyframes iconFall{ to{ transform: translate3d(var(--ix), 112vh, 0) rotate(var(--ir)); opacity:.08; } }
+    @keyframes iconFall{ to{ transform: translate3d(var(--ix), 112vh, 0) rotate(var(--ir)); opacity:.08; } }
 
     .kissPop{
       position: fixed;
@@ -336,6 +339,21 @@
       b.addEventListener('animationend',()=>b.remove(),{once:true});
     }
     setInterval(spawnBlossom, 820);
+
+    const floatingIcons = ['💖', '💘', '💕', '💞', '🌹'];
+    function spawnFloatIcon(){
+      const icon = document.createElement('span');
+      icon.className = 'floatIcon';
+      icon.textContent = floatingIcons[(Math.random() * floatingIcons.length) | 0];
+      icon.style.left = `${Math.random() * 100}%`;
+      icon.style.setProperty('--ix', `${(Math.random() * 90 - 45).toFixed(1)}px`);
+      icon.style.setProperty('--ir', `${(Math.random() * 150 - 75).toFixed(1)}deg`);
+      icon.style.animationDuration = `${6.2 + Math.random() * 4.4}s`;
+      document.body.appendChild(icon);
+      icon.addEventListener('animationend', () => icon.remove(), { once: true });
+      setTimeout(() => icon.remove(), 12000);
+    }
+    setInterval(spawnFloatIcon, 560);
 
     const canvas = document.getElementById('fx');
     const ctx = canvas.getContext('2d', { alpha:true });
