@@ -85,6 +85,8 @@
     @keyframes riseTrail{ to{ transform: translate3d(var(--tx), var(--ty), 0) rotate(var(--tr)); opacity:0; } }
 
     .mini{ margin-top:10px; font-size:14px; opacity:.8; }
+    .yesCelebrate{ margin-top:18px; font-size: clamp(72px, 16vw, 170px); line-height:1; text-align:center; opacity:0; transform: scale(.6); transition: opacity .35s ease, transform .35s cubic-bezier(.2,.8,.2,1); }
+    .yesCelebrate.show{ opacity:1; transform: scale(1); }
 
     .photos{ position:relative; min-height:360px; }
     .polaroid{
@@ -129,6 +131,7 @@
             <button class="btn no" id="no">No</button>
           </div>
           <div class="mini" id="mini">Try pressing No... it has dramatic reactions.</div>
+          <div class="yesCelebrate" id="yesCelebrate" aria-live="polite">💖</div>
         </section>
 
         <section class="photos" id="photos">
@@ -175,22 +178,36 @@
 
     const photos=[{el:document.getElementById('phA'),x:40,y:26,vx:0.22,vy:0.18,r:-10,rr:1},{el:document.getElementById('phB'),x:260,y:125,vx:-0.2,vy:0.17,r:8,rr:-1}];
 
+    const yesCelebrate = document.getElementById('yesCelebrate');
+
     let noCount=0;
     let yesScale=1;
+    let noMoves=0;
     no.addEventListener('click', ()=>{
+      if(noMoves >= 3) return;
+      noMoves += 1;
       noCount++;
       dodgeNo();
-      sprinkle(20 + noCount * 8);
-      if(noCount===1){ noteBody.textContent='Aww. The No button got shy and started running.'; mini.textContent='No runs away every time you tap it now.'; }
-      else if(noCount===2){ noteBody.textContent='Second no?! It unlocked turbo dodge.'; mini.textContent='YES grows stronger every no 💪💘'; }
-      else if(noCount===3){ noteBody.textContent='Okay this is funny. It is panicking in cute mode.'; mini.textContent='No is in random mode. Catch it if you can.'; }
-      else { noteBody.textContent='No button says: I surrender. Please press YES 🥹'; mini.textContent='Maximum silliness reached.'; no.textContent='still no?'; }
-      yesScale = Math.min(2.6, yesScale + 0.18);
+      sprinkle(26 + noCount * 8);
+
+      if(noMoves < 3){
+        noteBody.textContent='No button got shy and ran away again.';
+        mini.textContent=`Shy run ${noMoves}/3...`;
+      } else {
+        noteBody.textContent='No button got shy and ran away 💨';
+        mini.textContent='It vanished. Looks like YES is the only choice now 💘';
+        no.style.visibility='hidden';
+        no.style.pointerEvents='none';
+      }
+
+      yesScale = Math.min(2.6, yesScale + 0.2);
       yes.style.transform=`scale(${yesScale})`;
       yes.animate([{ transform:`scale(${yesScale - 0.08})` },{ transform:`scale(${yesScale})` }],{duration:320, easing:'cubic-bezier(.2,.8,.2,1)'});
     });
 
-    no.addEventListener('pointerenter', ()=>{ if(noCount > 0) dodgeNo(); });
+    no.addEventListener('pointerenter', ()=>{
+      if(noMoves > 0 && noMoves < 3) dodgeNo();
+    });
 
     function dodgeNo(){
       const rect=stage.getBoundingClientRect();
@@ -221,8 +238,9 @@
         window.valentineStartAudio().catch(() => {});
       }
       yes.disabled=true; no.disabled=true;
-      noteBody.textContent='YESSS! initiating romantic celebration mode ✨';
+      noteBody.textContent='YESSS! my heart is all yours 💖';
       mini.textContent='Launching hearts, sparkles, and happy chaos.';
+      yesCelebrate.classList.add('show');
       burst(340);
       setTimeout(()=> window.location.href='yes.html', 1250);
     });

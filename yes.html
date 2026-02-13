@@ -126,10 +126,25 @@
       const rows = 3;
       const gapY = rect.height / rows;
       let idx = 0;
+      const loveQuotes = [
+        'Every photo with you is my favorite memory in motion.',
+        'With you, even ordinary days turn into forever stories.',
+        'Your smile is still my safest place to come home to.',
+        'In every frame, my heart chooses you all over again.',
+        'You are the reason my world feels soft and warm.',
+        'Our little moments are the big treasures of my life.',
+        'Loving you is my favorite thing I have ever learned.',
+        'You and me: proof that destiny can look adorable.',
+        'I found home in your laugh and peace in your eyes.',
+        'Every picture whispers the same truth: I love you.',
+        'No matter the day, your hand is where mine belongs.'
+      ];
+
       for(let i=10;i<=20;i++){
         const el=document.createElement('div');
         el.className='photo';
-        el.innerHTML=`<img src="photos/${i}.jpeg" alt="Photo ${i}"><div class="cap">moment ${i}</div>`;
+        const quote = loveQuotes[i - 10] || `My favorite chapter is still us, always.`;
+        el.innerHTML=`<img src="photos/${i}.jpeg" alt="Our photo ${i}"><div class="cap">${quote}</div>`;
         box.appendChild(el);
 
         const c = idx % cols;

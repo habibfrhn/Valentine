@@ -36,7 +36,13 @@
 
     try {
       localStorage.setItem(KEY_TIME, String(audio.currentTime));
-      localStorage.setItem(KEY_INTENT, String(!audio.paused));
+
+      // Keep intent true while navigating between pages so autoplay continues seamlessly.
+      if (!audio.paused) {
+        localStorage.setItem(KEY_INTENT, 'true');
+      } else if (!document.hidden) {
+        localStorage.setItem(KEY_INTENT, 'false');
+      }
     } catch (error) {
       // ignore storage failures
     }
