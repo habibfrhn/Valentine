@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Yes</title>
+  <style>
+    :root{
+      --blue:#9fd3ff;
+      --red:#ffb3c7;
+      --ink:#243248;
+      --card: rgba(255,255,255,.84);
+      --card2: rgba(255,255,255,.92);
+      --border: rgba(36,50,72,.10);
+      --shadow: 0 18px 60px rgba(36,50,72,.18);
+    }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color:var(--ink);
+      overflow:auto;
+      background:
+        radial-gradient(900px 650px at 18% 18%, rgba(159,211,255,.62), transparent 62%),
+        radial-gradient(900px 650px at 84% 24%, rgba(255,179,199,.62), transparent 62%),
+        radial-gradient(900px 700px at 55% 92%, rgba(255,255,255,.92), transparent 58%),
+        linear-gradient(135deg, #f8fbff, #fff3f7);
+    }
+
+    canvas#fx{ position:fixed; inset:0; width:100%; height:100%; z-index:1; pointer-events:none; }
+
+    .wrap{ position:relative; z-index:2; padding:22px; display:grid; place-items:start center; min-height:100%; }
+    .card{
+      width:min(1100px, 94vw);
+      background: linear-gradient(180deg, var(--card2), var(--card));
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      border-radius: 28px;
+      padding: 22px;
+      backdrop-filter: blur(10px);
+      margin: 40px 0;
+      overflow:hidden;
+      position:relative;
+    }
+
+    h1{
+      margin:0 0 10px;
+      font-size: clamp(28px, 4.2vw, 62px);
+      letter-spacing:-.55px;
+      line-height:1.02;
+    }
+    p{ margin:0; font-size: clamp(15px, 2vw, 18px); line-height:1.55; opacity:.92; }
+    .sig{ margin-top:12px; font-weight:950; letter-spacing:-.2px; }
+
+    .btnRow{ margin-top:14px; display:flex; gap:12px; flex-wrap:wrap; }
+    .btn{
+      appearance:none; border:0; cursor:pointer;
+      padding:12px 14px;
+      border-radius:16px;
+      font-weight:950;
+      color: var(--ink);
+      border: 1px solid rgba(36,50,72,.12);
+      box-shadow: 0 10px 24px rgba(36,50,72,.10);
+      transition: transform .15s ease, filter .15s ease;
+      background: linear-gradient(135deg, rgba(255,179,199,.65), rgba(159,211,255,.65));
+    }
+    .btn:hover{ transform: translateY(-1px); filter: brightness(1.02); }
+    .btn:active{ transform: translateY(1px) scale(.99); }
+
+    .gallery{
+      margin-top:16px;
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap:12px;
+    }
+    @media (max-width: 980px){ .gallery{ grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 720px){ .gallery{ grid-template-columns: repeat(2, 1fr); } }
+
+    .tile{
+      border-radius:18px;
+      overflow:hidden;
+      border:1px solid rgba(36,50,72,.10);
+      box-shadow: 0 16px 44px rgba(36,50,72,.14);
+      background: rgba(255,255,255,.80);
+      transform: translateY(0);
+      animation: floatTile 4.2s ease-in-out infinite;
+    }
+    .tile:nth-child(2n){ animation-duration: 4.6s; }
+    .tile:nth-child(3n){ animation-duration: 3.9s; }
+    @keyframes floatTile{
+      0%,100%{ transform: translateY(0); }
+      50%{ transform: translateY(-7px); }
+    }
+    .tile img{ width:100%; height: 180px; object-fit:cover; display:block; }
+
+    .mini{ margin-top:12px; font-size:13px; opacity:.74; }
+
+    @media (prefers-reduced-motion: reduce){
+      canvas#fx{ display:none; }
+      *{ transition:none !important; animation:none !important; }
+    }
+  </style>
+</head>
+<body>
+  <script>
+    if(localStorage.getItem("val_ok") !== "yes"){
+      window.location.href = "verify.html";
+    }
+  </script>
+
+  <canvas id="fx"></canvas>
+
+  <div class="wrap">
+    <main class="card">
+      <h1>I am the luckiest person on earth</h1>
+      <p>
+        Thank you for being my Valentine Sayang
+        I love you so much
+      </p>
+      <div class="sig">With all my love</div>
+
+      <div class="btnRow">
+        <button class="btn" id="more">More hearts</button>
+        <button class="btn" id="restart">Start again</button>
+      </div>
+
+      <div class="gallery" id="gallery" aria-label="Photos 10 to 20"></div>
+      <div class="mini">Tap more hearts for extra chaos</div>
+    </main>
+  </div>
+
+  <script>
+    const gallery = document.getElementById('gallery');
+    for(let i=10;i<=20;i++){
+      const d = document.createElement('div');
+      d.className = 'tile';
+      const img = document.createElement('img');
+      img.loading = 'lazy';
+      img.src = `photos/${i}.jpeg`;
+      img.alt = `Photo ${i}`;
+      d.appendChild(img);
+      gallery.appendChild(d);
+    }
+
+    const canvas = document.getElementById('fx');
+    const ctx = canvas.getContext('2d', { alpha:true });
+    let W,H,DPR;
+    const rain = [];
+    const bursts = [];
+
+    function resize(){
+      DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      W = canvas.width = Math.floor(window.innerWidth * DPR);
+      H = canvas.height = Math.floor(window.innerHeight * DPR);
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    function rand(a,b){ return a + Math.random()*(b-a); }
+
+    function heartPath(x,y,s,rot){
+      ctx.save();
+      ctx.translate(x,y);
+      ctx.rotate(rot);
+      ctx.scale(s,s);
+      ctx.beginPath();
+      ctx.moveTo(0, 0.35);
+      ctx.bezierCurveTo(0, 0, -0.5, 0, -0.5, 0.35);
+      ctx.bezierCurveTo(-0.5, 0.6, -0.2, 0.85, 0, 1.0);
+      ctx.bezierCurveTo(0.2, 0.85, 0.5, 0.6, 0.5, 0.35);
+      ctx.bezierCurveTo(0.5, 0, 0, 0, 0, 0.35);
+      ctx.closePath();
+      ctx.restore();
+    }
+
+    function spawnRain(n=74){
+      for(let i=0;i<n;i++){
+        rain.push({
+          x: rand(0,W),
+          y: rand(-H, H),
+          vy: rand(0.95, 2.6) * DPR,
+          vx: rand(-0.35, 0.35) * DPR,
+          s: rand(8, 20) * DPR,
+          rot: rand(-0.8, 0.8),
+          vr: rand(-0.02, 0.02),
+          a: rand(0.12, 0.34)
+        });
+      }
+    }
+    spawnRain(82);
+
+    function burst(n=140){
+      const cx=W*0.5, cy=H*0.30;
+      for(let i=0;i<n;i++){
+        bursts.push({
+          x: cx + rand(-180,180)*DPR,
+          y: cy + rand(-110,110)*DPR,
+          vx: rand(-2.6,2.6)*DPR,
+          vy: rand(-3.8,-0.9)*DPR,
+          s: rand(7,13)*DPR,
+          rot: rand(-1.2,1.2),
+          vr: rand(-0.10,0.10),
+          life: rand(28,70),
+          a: rand(0.45,0.96)
+        });
+      }
+      gentleChime();
+      setTimeout(gentleChime, 140);
+    }
+
+    function gentleChime(){
+      try{
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if(!AudioCtx) return;
+        const ctxA = new AudioCtx();
+        const o = ctxA.createOscillator();
+        const g = ctxA.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(659.25, ctxA.currentTime);
+        g.gain.setValueAtTime(0.0001, ctxA.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.03, ctxA.currentTime + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, ctxA.currentTime + 0.28);
+        o.connect(g).connect(ctxA.destination);
+        o.start();
+        o.stop(ctxA.currentTime + 0.29);
+        setTimeout(()=> ctxA.close(), 420);
+      }catch(e){}
+    }
+
+    function tick(){
+      ctx.clearRect(0,0,W,H);
+
+      for(const h of rain){
+        h.y += h.vy;
+        h.x += h.vx;
+        h.rot += h.vr;
+
+        if(h.y > H + 60*DPR){
+          h.y = rand(-260, -40) * DPR;
+          h.x = rand(0, W);
+        }
+        if(h.x < -80*DPR) h.x = W + 80*DPR;
+        if(h.x > W + 80*DPR) h.x = -80*DPR;
+
+        ctx.globalAlpha = h.a;
+        heartPath(h.x, h.y, h.s, h.rot);
+        ctx.fillStyle = 'rgba(255,255,255,.92)';
+        ctx.fill();
+      }
+
+      for(let i=bursts.length-1;i>=0;i--){
+        const b = bursts[i];
+        b.x += b.vx;
+        b.y += b.vy;
+        b.vy += 0.09 * DPR;
+        b.rot += b.vr;
+        b.life -= 1;
+
+        const fade = Math.max(0, Math.min(1, b.life / 70));
+        ctx.globalAlpha = b.a * fade;
+        heartPath(b.x, b.y, b.s, b.rot);
+        ctx.fillStyle = 'rgba(255,255,255,.95)';
+        ctx.fill();
+        if(b.life <= 0) bursts.splice(i,1);
+      }
+
+      ctx.globalAlpha = 1;
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+
+    document.getElementById('more').addEventListener('click', ()=> burst(180));
+    document.getElementById('restart').addEventListener('click', ()=>{
+      localStorage.removeItem("val_ok");
+      window.location.href = "index.html";
+    });
+
+    setTimeout(()=> burst(160), 450);
+  </script>
+</body>
+</html>

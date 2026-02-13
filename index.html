@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>For Shana</title>
+  <style>
+    :root{
+      --blue:#9fd3ff;
+      --red:#ffb3c7;
+      --ink:#243248;
+      --card: rgba(255,255,255,.84);
+      --card2: rgba(255,255,255,.92);
+      --border: rgba(36,50,72,.10);
+      --shadow: 0 18px 60px rgba(36,50,72,.18);
+    }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color:var(--ink);
+      overflow:hidden;
+      background:
+        radial-gradient(900px 650px at 18% 18%, rgba(159,211,255,.62), transparent 62%),
+        radial-gradient(900px 650px at 84% 24%, rgba(255,179,199,.62), transparent 62%),
+        radial-gradient(900px 700px at 55% 92%, rgba(255,255,255,.92), transparent 58%),
+        linear-gradient(135deg, #f8fbff, #fff3f7);
+    }
+
+    .blob{
+      position:fixed;
+      width:420px;height:420px;border-radius:50%;
+      filter: blur(22px);
+      opacity:.55;
+      z-index:0;
+      pointer-events:none;
+      animation: floaty 7s ease-in-out infinite alternate;
+    }
+    .b1{ left:-120px; top:-120px; background: rgba(159,211,255,.92); }
+    .b2{ right:-140px; top:-140px; background: rgba(255,179,199,.92); animation-duration: 7.8s; }
+    .b3{ left:18%; bottom:-180px; background: rgba(255,255,255,.95); animation-duration: 8.4s; }
+    @keyframes floaty{
+      from{ transform: translate(0,0) scale(1); }
+      to{ transform: translate(26px, 18px) scale(1.03); }
+    }
+
+    canvas#fx{ position:fixed; inset:0; width:100%; height:100%; z-index:1; pointer-events:none; }
+
+    .wrap{
+      position:relative; z-index:2;
+      min-height:100%;
+      display:grid;
+      place-items:center;
+      padding:22px;
+    }
+
+    .card{
+      width:min(920px, 94vw);
+      background: linear-gradient(180deg, var(--card2), var(--card));
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      border-radius: 28px;
+      padding: 22px;
+      backdrop-filter: blur(10px);
+      overflow:hidden;
+      position:relative;
+    }
+
+    h1{
+      margin:0 0 10px;
+      font-size: clamp(28px, 4.2vw, 58px);
+      letter-spacing:-.55px;
+      line-height:1.02;
+    }
+    p{
+      margin:0;
+      font-size: clamp(15px, 2vw, 18px);
+      line-height:1.55;
+      opacity:.92;
+      max-width: 60ch;
+    }
+
+    .row{
+      margin-top:16px;
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap:14px;
+      align-items:center;
+    }
+    @media (max-width: 860px){
+      .row{ grid-template-columns: 1fr; }
+    }
+
+    .photos{
+      display:grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap:12px;
+      align-items:stretch;
+    }
+    .polaroid{
+      background: rgba(255,255,255,.80);
+      border:1px solid rgba(36,50,72,.10);
+      border-radius:18px;
+      overflow:hidden;
+      box-shadow: 0 16px 44px rgba(36,50,72,.14);
+      transform: rotate(var(--r));
+      animation: bob 3.2s ease-in-out infinite;
+    }
+    .polaroid:nth-child(2){ animation-duration: 3.6s; }
+    @keyframes bob{
+      0%,100%{ transform: rotate(var(--r)) translateY(0); }
+      50%{ transform: rotate(var(--r)) translateY(-6px); }
+    }
+    .polaroid img{
+      width:100%;
+      height: 220px;
+      object-fit: cover;
+      display:block;
+    }
+    .cap{
+      padding:10px 10px 12px;
+      font-size:13px;
+      opacity:.86;
+    }
+
+    .ctaRow{
+      margin-top:18px;
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .btn{
+      appearance:none; border:0; cursor:pointer;
+      padding:14px 18px;
+      border-radius:18px;
+      font-weight:950;
+      color: var(--ink);
+      border: 1px solid rgba(36,50,72,.12);
+      box-shadow: 0 12px 26px rgba(36,50,72,.12);
+      transition: transform .15s ease, filter .15s ease, box-shadow .2s ease;
+      background: linear-gradient(135deg, rgba(159,211,255,.75), rgba(255,179,199,.75));
+    }
+    .btn:hover{ transform: translateY(-1px); filter: brightness(1.02); }
+    .btn:active{ transform: translateY(1px) scale(.99); }
+
+    .tiny{
+      margin-top:12px;
+      font-size:13px;
+      opacity:.74;
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      canvas#fx, .blob{ display:none; }
+      *{ transition:none !important; animation:none !important; }
+    }
+  </style>
+</head>
+<body>
+  <script>
+    localStorage.removeItem("val_ok");
+  </script>
+
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+  <canvas id="fx"></canvas>
+
+  <div class="wrap">
+    <main class="card">
+      <h1>Happy Valentine Sayang</h1>
+      <p>
+        I made this little page for you.
+        Tap the button when you are ready.
+      </p>
+
+      <div class="row">
+        <div>
+          <div class="ctaRow">
+            <button class="btn" id="start">Open the surprise</button>
+          </div>
+          <div class="tiny">
+            There is a tiny check first.
+          </div>
+        </div>
+
+        <div class="photos">
+          <div class="polaroid" style="--r:-2.2deg">
+            <img src="photos/1.jpeg" alt="Photo 1" />
+            <div class="cap">You make everything softer</div>
+          </div>
+          <div class="polaroid" style="--r:2.1deg">
+            <img src="photos/2.jpeg" alt="Photo 2" />
+            <div class="cap">My favorite person</div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    document.getElementById('start').addEventListener('click', ()=>{
+      gentleChime();
+      burst(70);
+      setTimeout(()=> window.location.href = "verify.html", 520);
+    });
+
+    function gentleChime(){
+      try{
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if(!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(659.25, ctx.currentTime);
+        g.gain.setValueAtTime(0.0001, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.03, ctx.currentTime + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.28);
+        o.connect(g).connect(ctx.destination);
+        o.start();
+        o.stop(ctx.currentTime + 0.29);
+        setTimeout(()=> ctx.close(), 420);
+      }catch(e){}
+    }
+
+    const canvas = document.getElementById('fx');
+    const ctx = canvas.getContext('2d', { alpha:true });
+    let W,H,DPR;
+    const rain = [];
+    const bursts = [];
+
+    function resize(){
+      DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      W = canvas.width = Math.floor(window.innerWidth * DPR);
+      H = canvas.height = Math.floor(window.innerHeight * DPR);
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    function rand(a,b){ return a + Math.random()*(b-a); }
+
+    function heartPath(x,y,s,rot){
+      ctx.save();
+      ctx.translate(x,y);
+      ctx.rotate(rot);
+      ctx.scale(s,s);
+      ctx.beginPath();
+      ctx.moveTo(0, 0.35);
+      ctx.bezierCurveTo(0, 0, -0.5, 0, -0.5, 0.35);
+      ctx.bezierCurveTo(-0.5, 0.6, -0.2, 0.85, 0, 1.0);
+      ctx.bezierCurveTo(0.2, 0.85, 0.5, 0.6, 0.5, 0.35);
+      ctx.bezierCurveTo(0.5, 0, 0, 0, 0, 0.35);
+      ctx.closePath();
+      ctx.restore();
+    }
+
+    function spawnRain(n=50){
+      for(let i=0;i<n;i++){
+        rain.push({
+          x: rand(0,W),
+          y: rand(-H, H),
+          vy: rand(0.8, 2.1) * DPR,
+          vx: rand(-0.30, 0.30) * DPR,
+          s: rand(8, 18) * DPR,
+          rot: rand(-0.8, 0.8),
+          vr: rand(-0.02, 0.02),
+          a: rand(0.12, 0.30)
+        });
+      }
+    }
+    spawnRain(56);
+
+    function burst(n=70){
+      const cx=W*0.5, cy=H*0.45;
+      for(let i=0;i<n;i++){
+        bursts.push({
+          x: cx + rand(-150,150)*DPR,
+          y: cy + rand(-90,90)*DPR,
+          vx: rand(-2.3,2.3)*DPR,
+          vy: rand(-3.3,-0.8)*DPR,
+          s: rand(7,12)*DPR,
+          rot: rand(-1.2,1.2),
+          vr: rand(-0.10,0.10),
+          life: rand(26,56),
+          a: rand(0.45,0.94)
+        });
+      }
+    }
+
+    function tick(){
+      ctx.clearRect(0,0,W,H);
+
+      for(const h of rain){
+        h.y += h.vy;
+        h.x += h.vx;
+        h.rot += h.vr;
+        if(h.y > H + 60*DPR){
+          h.y = rand(-260, -40) * DPR;
+          h.x = rand(0, W);
+        }
+        if(h.x < -80*DPR) h.x = W + 80*DPR;
+        if(h.x > W + 80*DPR) h.x = -80*DPR;
+
+        ctx.globalAlpha = h.a;
+        heartPath(h.x, h.y, h.s, h.rot);
+        ctx.fillStyle = 'rgba(255,255,255,.92)';
+        ctx.fill();
+      }
+
+      for(let i=bursts.length-1;i>=0;i--){
+        const b = bursts[i];
+        b.x += b.vx;
+        b.y += b.vy;
+        b.vy += 0.09 * DPR;
+        b.rot += b.vr;
+        b.life -= 1;
+
+        const fade = Math.max(0, Math.min(1, b.life / 56));
+        ctx.globalAlpha = b.a * fade;
+        heartPath(b.x, b.y, b.s, b.rot);
+        ctx.fillStyle = 'rgba(255,255,255,.95)';
+        ctx.fill();
+        if(b.life <= 0) bursts.splice(i,1);
+      }
+
+      ctx.globalAlpha = 1;
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  </script>
+</body>
+</html>

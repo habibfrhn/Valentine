@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Check</title>
+  <style>
+    :root{
+      --blue:#9fd3ff;
+      --red:#ffb3c7;
+      --ink:#243248;
+      --card: rgba(255,255,255,.84);
+      --card2: rgba(255,255,255,.92);
+      --border: rgba(36,50,72,.10);
+      --shadow: 0 18px 60px rgba(36,50,72,.18);
+      --bad:#ff5b7a;
+    }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color:var(--ink);
+      overflow:hidden;
+      background:
+        radial-gradient(900px 650px at 18% 18%, rgba(159,211,255,.62), transparent 62%),
+        radial-gradient(900px 650px at 84% 24%, rgba(255,179,199,.62), transparent 62%),
+        radial-gradient(900px 700px at 55% 92%, rgba(255,255,255,.92), transparent 58%),
+        linear-gradient(135deg, #f8fbff, #fff3f7);
+    }
+
+    canvas#fx{ position:fixed; inset:0; width:100%; height:100%; z-index:1; pointer-events:none; }
+
+    .wrap{ position:relative; z-index:2; min-height:100%; display:grid; place-items:center; padding:22px; }
+    .card{
+      width:min(980px, 94vw);
+      background: linear-gradient(180deg, var(--card2), var(--card));
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      border-radius: 28px;
+      padding: 22px;
+      backdrop-filter: blur(10px);
+      overflow:hidden;
+    }
+
+    h1{ margin:0 0 8px; font-size: clamp(22px, 3.2vw, 40px); letter-spacing:-.35px; line-height:1.08; }
+    p{ margin:0; font-size: clamp(15px, 2vw, 18px); line-height:1.55; opacity:.92; }
+
+    .layout{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:14px;
+      align-items:start;
+    }
+    @media (max-width: 900px){
+      .layout{ grid-template-columns: 1fr; }
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:12px;
+      width: min(420px, 100%);
+    }
+    .tile{
+      aspect-ratio:1/1;
+      border-radius:18px;
+      border: 1px solid rgba(36,50,72,.12);
+      box-shadow: 0 14px 34px rgba(36,50,72,.14);
+      cursor:pointer;
+      position:relative;
+      overflow:hidden;
+      transition: transform .15s ease, filter .15s ease;
+    }
+    .tile:hover{ transform: translateY(-2px); filter: brightness(1.02); }
+    .tile:active{ transform: translateY(1px) scale(.99); }
+    .shine{
+      position:absolute; inset:-45%;
+      background: linear-gradient(120deg, transparent, rgba(255,255,255,.55), transparent);
+      transform: rotate(12deg);
+      animation: shine 2.7s ease-in-out infinite;
+      opacity:.55;
+      pointer-events:none;
+    }
+    @keyframes shine{
+      0%{ transform: translateX(-35%) rotate(12deg); }
+      60%{ transform: translateX(35%) rotate(12deg); }
+      100%{ transform: translateX(35%) rotate(12deg); }
+    }
+
+    .photos{
+      display:grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap:10px;
+    }
+    @media (max-width: 900px){
+      .photos{ grid-template-columns: repeat(3, 1fr); }
+    }
+    .ph{
+      border-radius:16px;
+      overflow:hidden;
+      border:1px solid rgba(36,50,72,.10);
+      box-shadow: 0 12px 30px rgba(36,50,72,.12);
+      background: rgba(255,255,255,.75);
+      transform: translateY(0);
+      animation: floatPhoto 3.8s ease-in-out infinite;
+    }
+    .ph:nth-child(2){ animation-duration: 4.1s; }
+    .ph:nth-child(3){ animation-duration: 3.6s; }
+    .ph:nth-child(4){ animation-duration: 4.3s; }
+    .ph:nth-child(5){ animation-duration: 3.9s; }
+    @keyframes floatPhoto{
+      0%,100%{ transform: translateY(0); }
+      50%{ transform: translateY(-7px); }
+    }
+    .ph img{ width:100%; height:120px; object-fit:cover; display:block; }
+
+    .hint{ margin-top:12px; font-size:13px; opacity:.75; }
+
+    .modal{
+      position:fixed; inset:0;
+      display:grid; place-items:center;
+      background: rgba(36,50,72,.25);
+      z-index:10;
+      opacity:0;
+      pointer-events:none;
+      transition: opacity 220ms ease;
+      padding:18px;
+    }
+    .modal.open{ opacity:1; pointer-events:auto; }
+    .box{
+      width:min(520px, 96vw);
+      border-radius:22px;
+      background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.80));
+      border:1px solid rgba(36,50,72,.12);
+      box-shadow: 0 22px 80px rgba(36,50,72,.22);
+      padding:16px;
+    }
+    .title{
+      display:flex; align-items:center; gap:10px;
+      font-weight:950;
+      letter-spacing:-.2px;
+      margin-bottom:6px;
+    }
+    .warnDot{ width:10px; height:10px; border-radius:50%; background: var(--bad); box-shadow:0 0 16px rgba(255,91,122,.35); }
+    .actions{ margin-top:12px; display:flex; justify-content:flex-end; }
+    .btn{
+      appearance:none; border:0; cursor:pointer;
+      padding:12px 14px;
+      border-radius:16px;
+      font-weight:950;
+      color: var(--ink);
+      background: rgba(255,179,199,.55);
+      border: 1px solid rgba(36,50,72,.12);
+      box-shadow: 0 10px 24px rgba(36,50,72,.10);
+      transition: transform .15s ease, filter .15s ease;
+    }
+    .btn:hover{ transform: translateY(-1px); filter: brightness(1.02); }
+    .btn:active{ transform: translateY(1px) scale(.99); }
+
+    @media (prefers-reduced-motion: reduce){
+      canvas#fx{ display:none; }
+      *{ transition:none !important; animation:none !important; }
+    }
+  </style>
+</head>
+<body>
+  <script>
+    localStorage.removeItem("val_ok");
+  </script>
+
+  <canvas id="fx"></canvas>
+
+  <div class="modal" id="modal" aria-hidden="true">
+    <div class="box" role="dialog" aria-modal="true" aria-label="Wrong answer">
+      <div class="title"><span class="warnDot"></span> Wrong answer</div>
+      <p style="margin:6px 0 0; opacity:.92;">
+        Wrong answer you are not my girlfriend
+      </p>
+      <div class="actions">
+        <button class="btn" id="modalBtn">Try again</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <main class="card">
+      <h1>Just a quick check Sayang</h1>
+      <p>Choose Shana favorite color</p>
+
+      <div class="layout">
+        <div>
+          <div class="grid" id="grid" aria-label="Color choices"></div>
+          <div class="hint">Hint it is the blue one</div>
+        </div>
+
+        <div class="photos" aria-label="Photos 5 to 9">
+          <div class="ph"><img src="photos/5.jpeg" alt="Photo 5"></div>
+          <div class="ph"><img src="photos/6.jpeg" alt="Photo 6"></div>
+          <div class="ph"><img src="photos/7.jpeg" alt="Photo 7"></div>
+          <div class="ph"><img src="photos/8.jpeg" alt="Photo 8"></div>
+          <div class="ph"><img src="photos/9.jpeg" alt="Photo 9"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const BLUE = getComputedStyle(document.documentElement).getPropertyValue('--blue').trim();
+    const colors = [
+      "#ffd6e7", "#fff1a6", "#bff3e1",
+      "#cbb8ff", BLUE,        "#ffc4a8",
+      "#bfe1ff", "#ffe7f1", "#cdebbf"
+    ];
+
+    const modal = document.getElementById('modal');
+    const modalBtn = document.getElementById('modalBtn');
+    function openModal(){ modal.classList.add('open'); modal.setAttribute('aria-hidden','false'); }
+    function closeModal(){ modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); }
+    modalBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e)=>{ if(e.target===modal) closeModal(); });
+
+    const grid = document.getElementById('grid');
+
+    colors.forEach(c=>{
+      const b=document.createElement('button');
+      b.type='button';
+      b.className='tile';
+      b.style.background=c;
+      const s=document.createElement('div'); s.className='shine'; b.appendChild(s);
+
+      b.addEventListener('click', ()=>{
+        const isBlue = (c === BLUE);
+        if(!isBlue){
+          wobble(b);
+          openModal();
+          return;
+        }
+        localStorage.setItem("val_ok","yes");
+        gentleChime();
+        burst(90);
+        setTimeout(()=> window.location.href="question.html", 580);
+      });
+
+      grid.appendChild(b);
+    });
+
+    function wobble(el){
+      el.animate(
+        [
+          { transform: 'translateX(0)' },
+          { transform: 'translateX(-6px)' },
+          { transform: 'translateX(6px)' },
+          { transform: 'translateX(-4px)' },
+          { transform: 'translateX(4px)' },
+          { transform: 'translateX(0)' }
+        ],
+        { duration: 420, easing: 'ease-in-out' }
+      );
+    }
+
+    function gentleChime(){
+      try{
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if(!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(659.25, ctx.currentTime);
+        g.gain.setValueAtTime(0.0001, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.03, ctx.currentTime + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.28);
+        o.connect(g).connect(ctx.destination);
+        o.start();
+        o.stop(ctx.currentTime + 0.29);
+        setTimeout(()=> ctx.close(), 420);
+      }catch(e){}
+    }
+
+    const canvas = document.getElementById('fx');
+    const ctx = canvas.getContext('2d', { alpha:true });
+    let W,H,DPR;
+    const rain = [];
+    const bursts = [];
+
+    function resize(){
+      DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      W = canvas.width = Math.floor(window.innerWidth * DPR);
+      H = canvas.height = Math.floor(window.innerHeight * DPR);
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    function rand(a,b){ return a + Math.random()*(b-a); }
+
+    function heartPath(x,y,s,rot){
+      ctx.save();
+      ctx.translate(x,y);
+      ctx.rotate(rot);
+      ctx.scale(s,s);
+      ctx.beginPath();
+      ctx.moveTo(0, 0.35);
+      ctx.bezierCurveTo(0, 0, -0.5, 0, -0.5, 0.35);
+      ctx.bezierCurveTo(-0.5, 0.6, -0.2, 0.85, 0, 1.0);
+      ctx.bezierCurveTo(0.2, 0.85, 0.5, 0.6, 0.5, 0.35);
+      ctx.bezierCurveTo(0.5, 0, 0, 0, 0, 0.35);
+      ctx.closePath();
+      ctx.restore();
+    }
+
+    function spawnRain(n=60){
+      for(let i=0;i<n;i++){
+        rain.push({
+          x: rand(0,W),
+          y: rand(-H, H),
+          vy: rand(0.9, 2.3) * DPR,
+          vx: rand(-0.32, 0.32) * DPR,
+          s: rand(8, 18) * DPR,
+          rot: rand(-0.8, 0.8),
+          vr: rand(-0.02, 0.02),
+          a: rand(0.12, 0.30)
+        });
+      }
+    }
+    spawnRain(66);
+
+    function burst(n=90){
+      const cx=W*0.35, cy=H*0.52;
+      for(let i=0;i<n;i++){
+        bursts.push({
+          x: cx + rand(-160,160)*DPR,
+          y: cy + rand(-90,90)*DPR,
+          vx: rand(-2.4,2.4)*DPR,
+          vy: rand(-3.4,-0.8)*DPR,
+          s: rand(7,12)*DPR,
+          rot: rand(-1.2,1.2),
+          vr: rand(-0.10,0.10),
+          life: rand(28,60),
+          a: rand(0.45,0.94)
+        });
+      }
+    }
+
+    function tick(){
+      ctx.clearRect(0,0,W,H);
+
+      for(const h of rain){
+        h.y += h.vy;
+        h.x += h.vx;
+        h.rot += h.vr;
+
+        if(h.y > H + 60*DPR){
+          h.y = rand(-260, -40) * DPR;
+          h.x = rand(0, W);
+        }
+        if(h.x < -80*DPR) h.x = W + 80*DPR;
+        if(h.x > W + 80*DPR) h.x = -80*DPR;
+
+        ctx.globalAlpha = h.a;
+        heartPath(h.x, h.y, h.s, h.rot);
+        ctx.fillStyle = 'rgba(255,255,255,.92)';
+        ctx.fill();
+      }
+
+      for(let i=bursts.length-1;i>=0;i--){
+        const b = bursts[i];
+        b.x += b.vx;
+        b.y += b.vy;
+        b.vy += 0.09 * DPR;
+        b.rot += b.vr;
+        b.life -= 1;
+
+        const fade = Math.max(0, Math.min(1, b.life / 60));
+        ctx.globalAlpha = b.a * fade;
+        heartPath(b.x, b.y, b.s, b.rot);
+        ctx.fillStyle = 'rgba(255,255,255,.95)';
+        ctx.fill();
+        if(b.life <= 0) bursts.splice(i,1);
+      }
+
+      ctx.globalAlpha = 1;
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  </script>
+</body>
+</html>

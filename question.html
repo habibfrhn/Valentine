@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>The Question</title>
+  <style>
+    :root{
+      --blue:#9fd3ff;
+      --red:#ffb3c7;
+      --ink:#243248;
+      --card: rgba(255,255,255,.84);
+      --card2: rgba(255,255,255,.92);
+      --border: rgba(36,50,72,.10);
+      --shadow: 0 18px 60px rgba(36,50,72,.18);
+    }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color:var(--ink);
+      overflow:hidden;
+      background:
+        radial-gradient(900px 650px at 18% 18%, rgba(159,211,255,.62), transparent 62%),
+        radial-gradient(900px 650px at 84% 24%, rgba(255,179,199,.62), transparent 62%),
+        radial-gradient(900px 700px at 55% 92%, rgba(255,255,255,.92), transparent 58%),
+        linear-gradient(135deg, #f8fbff, #fff3f7);
+    }
+
+    canvas#fx{ position:fixed; inset:0; width:100%; height:100%; z-index:1; pointer-events:none; }
+
+    .wrap{ position:relative; z-index:2; min-height:100%; display:grid; place-items:center; padding:22px; }
+    .card{
+      width:min(980px, 94vw);
+      background: linear-gradient(180deg, var(--card2), var(--card));
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      border-radius: 28px;
+      padding: 22px;
+      backdrop-filter: blur(10px);
+      overflow:hidden;
+    }
+
+    h1{ margin:0 0 8px; font-size: clamp(22px, 3.2vw, 40px); letter-spacing:-.35px; line-height:1.08; }
+    p{ margin:0; font-size: clamp(15px, 2vw, 18px); line-height:1.55; opacity:.92; }
+
+    .layout{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:14px;
+      align-items:stretch;
+    }
+    @media (max-width: 900px){
+      .layout{ grid-template-columns: 1fr; }
+    }
+
+    .stage{
+      border-radius:24px;
+      border: 1px solid rgba(36,50,72,.10);
+      background: rgba(255,255,255,.66);
+      box-shadow: 0 14px 40px rgba(36,50,72,.12);
+      padding:16px;
+      min-height: 320px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .note{
+      display:inline-block;
+      border-radius:18px;
+      background: rgba(255,255,255,.82);
+      border: 1px solid rgba(36,50,72,.10);
+      padding:12px 14px;
+      box-shadow: 0 10px 30px rgba(36,50,72,.10);
+      opacity:0;
+      transform: translateY(10px) scale(.99);
+      transition: opacity 700ms ease, transform 700ms ease;
+    }
+    .note.show{ opacity:1; transform: translateY(0) scale(1); }
+    .noteTitle{ font-weight:950; letter-spacing:-.2px; }
+    .noteBody{ margin-top:6px; opacity:.92; line-height:1.55; }
+
+    .question{
+      margin-top:14px;
+      font-weight:1000;
+      letter-spacing:-.45px;
+      font-size: clamp(28px, 4.1vw, 56px);
+      line-height:1.02;
+      opacity:0;
+      transform: translateY(10px);
+      transition: opacity 650ms ease, transform 650ms ease;
+    }
+    .question.show{ opacity:1; transform: translateY(0); }
+
+    .actions{
+      margin-top:14px;
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:center;
+      position:relative;
+      min-height: 54px;
+    }
+
+    .btn{
+      appearance:none; border:0; cursor:pointer;
+      padding:12px 16px;
+      border-radius:16px;
+      font-weight:950;
+      color: var(--ink);
+      background: rgba(255,255,255,.86);
+      border: 1px solid rgba(36,50,72,.12);
+      box-shadow: 0 10px 24px rgba(36,50,72,.10);
+      transition: transform .15s ease, filter .15s ease, box-shadow .2s ease;
+    }
+    .btn:hover{ transform: translateY(-1px); filter: brightness(1.02); }
+    .btn:active{ transform: translateY(1px) scale(.99); }
+
+    .yes{
+      background: linear-gradient(135deg, rgba(159,211,255,.70), rgba(255,179,199,.60));
+    }
+    .yes.glow{
+      animation: glow 1.25s ease-in-out infinite;
+    }
+    @keyframes glow{
+      0%,100%{ box-shadow: 0 10px 24px rgba(36,50,72,.10); }
+      50%{ box-shadow: 0 14px 34px rgba(159,211,255,.35); }
+    }
+
+    .no.flee{
+      position:absolute;
+      left: var(--nx);
+      top: var(--ny);
+      transform: translate(-50%, -50%) rotate(var(--nr));
+      transition: left 220ms ease, top 220ms ease, transform 220ms ease;
+      z-index:3;
+    }
+
+    .mini{ margin-top:10px; font-size:13px; opacity:.75; }
+
+    .photos{
+      display:grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap:12px;
+      align-items:stretch;
+    }
+    .polaroid{
+      background: rgba(255,255,255,.80);
+      border:1px solid rgba(36,50,72,.10);
+      border-radius:18px;
+      overflow:hidden;
+      box-shadow: 0 16px 44px rgba(36,50,72,.14);
+      transform: rotate(var(--r));
+      animation: bob 3.4s ease-in-out infinite;
+    }
+    .polaroid:nth-child(2){ animation-duration: 3.8s; }
+    @keyframes bob{
+      0%,100%{ transform: rotate(var(--r)) translateY(0); }
+      50%{ transform: rotate(var(--r)) translateY(-6px); }
+    }
+    .polaroid img{ width:100%; height: 240px; object-fit:cover; display:block; }
+    .cap{ padding:10px 10px 12px; font-size:13px; opacity:.86; }
+
+    @media (prefers-reduced-motion: reduce){
+      canvas#fx{ display:none; }
+      *{ transition:none !important; animation:none !important; }
+    }
+  </style>
+</head>
+<body>
+  <script>
+    if(localStorage.getItem("val_ok") !== "yes"){
+      window.location.href = "verify.html";
+    }
+  </script>
+
+  <canvas id="fx"></canvas>
+
+  <div class="wrap">
+    <main class="card">
+      <h1>One more thing Sayang</h1>
+      <p>Before I ask I want you to feel how much I love you</p>
+
+      <div class="layout">
+        <section class="stage" id="stage">
+          <div class="note" id="note">
+            <div class="noteTitle">A small confession</div>
+            <div class="noteBody" id="noteBody">You make my world calmer and brighter</div>
+          </div>
+
+          <div class="question" id="q">Will you be my Valentine</div>
+
+          <div class="actions">
+            <button class="btn yes" id="yes">Yes</button>
+            <button class="btn no" id="no">No</button>
+          </div>
+
+          <div class="mini" id="mini">If you press No the button might get shy</div>
+        </section>
+
+        <section class="photos">
+          <div class="polaroid" style="--r:-2deg">
+            <img src="photos/3.jpeg" alt="Photo 3" />
+            <div class="cap">Us</div>
+          </div>
+          <div class="polaroid" style="--r:2deg">
+            <img src="photos/4.jpeg" alt="Photo 4" />
+            <div class="cap">Always you</div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const stage = document.getElementById('stage');
+    const note = document.getElementById('note');
+    const q = document.getElementById('q');
+    const yes = document.getElementById('yes');
+    const no = document.getElementById('no');
+    const noteBody = document.getElementById('noteBody');
+    const mini = document.getElementById('mini');
+
+    setTimeout(()=> note.classList.add('show'), 280);
+    setTimeout(()=>{
+      q.classList.add('show');
+      softBeat();
+      yes.classList.add('glow');
+    }, 1200);
+
+    let noCount = 0;
+    no.addEventListener('click', ()=>{
+      noCount++;
+      makeNoFlee();
+      sprinkle(16);
+      softBeat();
+
+      if(noCount === 1){
+        noteBody.textContent = "That is okay I still choose you";
+        mini.textContent = "The No button is getting shy";
+      } else if(noCount === 2){
+        noteBody.textContent = "It ran away again it knows the right answer";
+        mini.textContent = "Try to catch it if you really mean it";
+      } else {
+        noteBody.textContent = "I will ask gently because you matter to me";
+        mini.textContent = "Okay Sayang pick the real answer";
+      }
+    });
+
+    function makeNoFlee(){
+      const rect = stage.getBoundingClientRect();
+      const pad = 56;
+      const x = Math.random() * (rect.width - pad*2) + pad;
+      const y = Math.random() * (rect.height - pad*2) + pad;
+      const r = (Math.random()*10 - 5).toFixed(2) + 'deg';
+      no.classList.add('flee');
+      no.style.setProperty('--nx', x + 'px');
+      no.style.setProperty('--ny', y + 'px');
+      no.style.setProperty('--nr', r);
+    }
+
+    yes.addEventListener('click', ()=>{
+      yes.classList.remove('glow');
+      yes.disabled = true;
+      no.disabled = true;
+      noteBody.textContent = "I am so happy you said yes";
+      mini.textContent = "One second I want to make this moment sparkle";
+      bigCelebrate();
+      setTimeout(()=> window.location.href="yes.html", 1200);
+    });
+
+    function softBeat(){
+      stage.animate(
+        [{ transform:'scale(1)' }, { transform:'scale(1.008)' }, { transform:'scale(1)' }],
+        { duration: 360, easing:'ease-in-out' }
+      );
+      gentleChime();
+    }
+
+    function gentleChime(){
+      try{
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if(!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(659.25, ctx.currentTime);
+        g.gain.setValueAtTime(0.0001, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.03, ctx.currentTime + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.28);
+        o.connect(g).connect(ctx.destination);
+        o.start();
+        o.stop(ctx.currentTime + 0.29);
+        setTimeout(()=> ctx.close(), 420);
+      }catch(e){}
+    }
+
+    const canvas = document.getElementById('fx');
+    const ctx = canvas.getContext('2d', { alpha:true });
+    let W,H,DPR;
+    const rain = [];
+    const bursts = [];
+
+    function resize(){
+      DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      W = canvas.width = Math.floor(window.innerWidth * DPR);
+      H = canvas.height = Math.floor(window.innerHeight * DPR);
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    function rand(a,b){ return a + Math.random()*(b-a); }
+
+    function heartPath(x,y,s,rot){
+      ctx.save();
+      ctx.translate(x,y);
+      ctx.rotate(rot);
+      ctx.scale(s,s);
+      ctx.beginPath();
+      ctx.moveTo(0, 0.35);
+      ctx.bezierCurveTo(0, 0, -0.5, 0, -0.5, 0.35);
+      ctx.bezierCurveTo(-0.5, 0.6, -0.2, 0.85, 0, 1.0);
+      ctx.bezierCurveTo(0.2, 0.85, 0.5, 0.6, 0.5, 0.35);
+      ctx.bezierCurveTo(0.5, 0, 0, 0, 0, 0.35);
+      ctx.closePath();
+      ctx.restore();
+    }
+
+    function spawnRain(n=58){
+      for(let i=0;i<n;i++){
+        rain.push({
+          x: rand(0,W),
+          y: rand(-H, H),
+          vy: rand(0.85, 2.2) * DPR,
+          vx: rand(-0.30, 0.30) * DPR,
+          s: rand(8, 18) * DPR,
+          rot: rand(-0.8, 0.8),
+          vr: rand(-0.02, 0.02),
+          a: rand(0.10, 0.26)
+        });
+      }
+    }
+    spawnRain(64);
+
+    function sprinkle(n=16){
+      const rect = stage.getBoundingClientRect();
+      const cx = (rect.left + rect.width/2) * DPR;
+      const cy = (rect.top + rect.height/2) * DPR;
+      for(let i=0;i<n;i++){
+        bursts.push({
+          x: cx + rand(-rect.width*0.28, rect.width*0.28) * DPR,
+          y: cy + rand(-rect.height*0.22, rect.height*0.22) * DPR,
+          vx: rand(-2.4,2.4)*DPR,
+          vy: rand(-3.4,-0.8)*DPR,
+          s: rand(7,12)*DPR,
+          rot: rand(-1.2,1.2),
+          vr: rand(-0.10,0.10),
+          life: rand(28,60),
+          a: rand(0.45,0.94)
+        });
+      }
+    }
+
+    function bigCelebrate(){
+      sprinkle(120);
+    }
+
+    function tick(){
+      ctx.clearRect(0,0,W,H);
+
+      for(const h of rain){
+        h.y += h.vy;
+        h.x += h.vx;
+        h.rot += h.vr;
+
+        if(h.y > H + 60*DPR){
+          h.y = rand(-260, -40) * DPR;
+          h.x = rand(0, W);
+        }
+        if(h.x < -80*DPR) h.x = W + 80*DPR;
+        if(h.x > W + 80*DPR) h.x = -80*DPR;
+
+        ctx.globalAlpha = h.a;
+        heartPath(h.x, h.y, h.s, h.rot);
+        ctx.fillStyle = 'rgba(255,255,255,.92)';
+        ctx.fill();
+      }
+
+      for(let i=bursts.length-1;i>=0;i--){
+        const b = bursts[i];
+        b.x += b.vx;
+        b.y += b.vy;
+        b.vy += 0.09 * DPR;
+        b.rot += b.vr;
+        b.life -= 1;
+
+        const fade = Math.max(0, Math.min(1, b.life / 60));
+        ctx.globalAlpha = b.a * fade;
+        heartPath(b.x, b.y, b.s, b.rot);
+        ctx.fillStyle = 'rgba(255,255,255,.95)';
+        ctx.fill();
+        if(b.life <= 0) bursts.splice(i,1);
+      }
+
+      ctx.globalAlpha = 1;
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  </script>
+</body>
+</html>
