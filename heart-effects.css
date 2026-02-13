@@ -1,5 +1,6 @@
 .heart-rain,
-.orbit-heart{
+.orbit-heart,
+.romance-pop-layer{
   position: fixed;
   top: 0;
   right: 0;
@@ -24,24 +25,28 @@
     0 0 14px rgba(255, 80, 150, 0.8),
     0 0 30px rgba(255, 130, 180, 0.6);
   animation-name: heartFall;
+  -webkit-animation-name: heartFall;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
   user-select: none;
   will-change: transform, opacity;
 }
 
+@-webkit-keyframes heartFall {
+  0% { transform: translate3d(0, -10vh, 0) rotate(0deg) scale(0.9); opacity: 0; }
+  10% { opacity: 0.95; }
+  100% { transform: translate3d(var(--drift, 0px), 110vh, 0) rotate(280deg) scale(1.15); opacity: 0; }
+}
+
 @keyframes heartFall {
-  0% {
-    transform: translate3d(0, -10vh, 0) rotate(0deg) scale(0.9);
-    opacity: 0;
-  }
-  10% {
-    opacity: 0.95;
-  }
-  100% {
-    transform: translate3d(var(--drift, 0px), 110vh, 0) rotate(280deg) scale(1.15);
-    opacity: 0;
-  }
+  0% { transform: translate3d(0, -10vh, 0) rotate(0deg) scale(0.9); opacity: 0; }
+  10% { opacity: 0.95; }
+  100% { transform: translate3d(var(--drift, 0px), 110vh, 0) rotate(280deg) scale(1.15); opacity: 0; }
+}
+
+.heart-rain.no-css-anim .drop-heart{
+  animation: none;
+  -webkit-animation: none;
 }
 
 .orbit-heart{
@@ -64,14 +69,44 @@
     0 0 38px rgba(255, 120, 175, 0.45);
   opacity: 0.98;
   transform: translate(-50%, -50%);
+  animation: heartBeat 1.9s ease-in-out infinite;
+  -webkit-animation: heartBeat 1.9s ease-in-out infinite;
+}
+
+@-webkit-keyframes heartBeat {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  40% { transform: translate(-50%, -50%) scale(1.08); }
+  70% { transform: translate(-50%, -50%) scale(0.98); }
+}
+
+@keyframes heartBeat {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  40% { transform: translate(-50%, -50%) scale(1.08); }
+  70% { transform: translate(-50%, -50%) scale(0.98); }
+}
+
+.romance-pop-layer{
+  z-index: 10;
+}
+
+.romance-pop{
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-size: 18px;
+  opacity: 0;
+  transform: translate3d(-50%, -50%, 0);
+  will-change: transform, opacity;
 }
 
 .heart-rain.reduced .drop-heart{
   animation: none;
+  -webkit-animation: none;
   top: auto;
   opacity: 0.75;
 }
 
 .orbit-heart.reduced .heart-core{
   animation: none;
+  -webkit-animation: none;
 }
