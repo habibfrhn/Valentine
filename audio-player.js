@@ -12,6 +12,14 @@
 
   let audio;
   let audioCtx;
+  let activeCandidateIndex = -1;
+
+  function getAudioCandidates() {
+    const inline = document.body?.dataset?.audioSrc || document.documentElement?.dataset?.audioSrc;
+    const fromMeta = document.querySelector('meta[name="valentine-audio-src"]')?.content;
+    const custom = [inline, fromMeta].filter(Boolean);
+    return [...new Set([...custom, ...AUDIO_CANDIDATES])];
+  }
 
   function saveTime() {
     if (!audio || Number.isNaN(audio.currentTime)) return;
@@ -86,25 +94,21 @@
   }
 
   function handleAudioError() {
+    const candidates = getAudioCandidates();
+    const nextIndex = activeCandidateIndex + 1;
+    if (nextIndex < candidates.length) {
+      activeCandidateIndex = nextIndex;
+      audio.src = candidates[activeCandidateIndex];
+      audio.load();
+      if (shouldAutoPlay()) {
+        tryPlayAudio();
+      }
+      return;
+    }
+
     try { localStorage.setItem(KEY_MODE, 'file-error'); } catch (e) {}
+    console.warn(`[valentine-audio] Missing audio file. Tried: ${candidates.join(', ')}.`);
     markAllowed();
-  }
-
-  function resolveAudioSource() {
-    const checks = AUDIO_CANDIDATES.map((candidate) => (
-      fetch(candidate, { method: 'HEAD', cache: 'no-store' })
-        .then((res) => (res.ok ? candidate : null))
-        .catch(() => null)
-    ));
-
-    return Promise.all(checks).then((results) => {
-      const found = results.find(Boolean);
-      if (found) return found;
-
-      console.warn(`[valentine-audio] Missing audio file. Tried: ${AUDIO_CANDIDATES.join(', ')}.`);
-      try { localStorage.setItem(KEY_MODE, 'file-missing'); } catch (e) {}
-      return AUDIO_CANDIDATES[0];
-    });
   }
 
   function shouldAutoPlay() {
@@ -129,17 +133,13 @@
 
     document.body.appendChild(audio);
 
-    resolveAudioSource().then((audioSrc) => {
-      audio.src = audioSrc;
-      resumeTime();
-      if (shouldAutoPlay()) {
-        tryPlayAudio();
-      }
+    activeCandidateIndex = -1;
+    handleAudioError();
+    resumeTime();
 
-      if (localStorage.getItem(KEY_ALLOWED) === 'yes') {
-        unlockAndPlay();
-      }
-    });
+    if (localStorage.getItem(KEY_ALLOWED) === 'yes') {
+      unlockAndPlay();
+    }
 
     const unlockEvents = ['pointerdown', 'touchstart', 'keydown', 'click'];
     unlockEvents.forEach((evt) => {
