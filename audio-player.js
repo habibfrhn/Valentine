@@ -6,6 +6,7 @@
 
   let audio = null;
   let srcIndex = 0;
+  let restoredOnce = false;
 
   function pickProjectPrefixedCandidates() {
     const host = window.location.hostname;
@@ -42,10 +43,13 @@
   }
 
   function restorePlaybackPosition() {
-    if (!audio) return;
+    if (!audio || restoredOnce) return;
 
     const saved = parseFloat(localStorage.getItem(KEY_TIME) || '0');
-    if (!Number.isFinite(saved) || saved <= 0) return;
+    if (!Number.isFinite(saved) || saved <= 0) {
+      restoredOnce = true;
+      return;
+    }
 
     const seek = () => {
       try {
@@ -53,6 +57,7 @@
       } catch (error) {
         // ignore seek issues
       }
+      restoredOnce = true;
     };
 
     if (audio.readyState > 0) {
@@ -67,6 +72,7 @@
     if (index >= candidates.length) return false;
 
     srcIndex = index;
+    restoredOnce = false;
     audio.src = candidates[index];
     audio.load();
     return true;
@@ -74,6 +80,8 @@
 
   async function playIfPossible() {
     if (!audio || !audio.src) return false;
+
+    restorePlaybackPosition();
 
     try {
       await audio.play();
@@ -100,6 +108,23 @@
     };
 
     events.forEach((eventName) => window.addEventListener(eventName, onceHandler, { capture: true, once: false }));
+  }
+
+  function attachNavigationStateSync() {
+    const syncAndKeepIntent = () => {
+      savePlaybackState();
+      localStorage.setItem(KEY_INTENT, 'true');
+    };
+
+    document.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+
+      const activatesNavigation = target.closest('a[href], button, [role="button"]');
+      if (activatesNavigation) {
+        syncAndKeepIntent();
+      }
+    }, true);
   }
 
   function initAudioElement() {
@@ -130,8 +155,12 @@
   function init() {
     initAudioElement();
     attachGestureUnlock();
+    attachNavigationStateSync();
 
-    if (localStorage.getItem(KEY_ENABLED) === 'yes' && shouldKeepPlaying()) {
+    const wasEnabled = localStorage.getItem(KEY_ENABLED) === 'yes';
+    const canAutoplayFromEntryClick = document.userActivation?.hasBeenActive || performance.getEntriesByType('navigation')[0]?.type === 'navigate';
+
+    if ((wasEnabled || canAutoplayFromEntryClick) && shouldKeepPlaying()) {
       playIfPossible();
     }
 
