@@ -2,6 +2,7 @@
   const KEY_TIME = 'valentine_audio_time';
   const KEY_ALLOWED = 'valentine_audio_allowed';
   const KEY_MODE = 'valentine_audio_mode';
+  const KEY_SHOULD_PLAY = 'valentine_audio_should_play';
   const SOURCES = ['audio/baby-blue.mp3', '/audio/baby-blue.mp3', './audio/baby-blue.mp3'];
 
   let audio;
@@ -10,7 +11,10 @@
 
   function saveTime() {
     if (!audio || Number.isNaN(audio.currentTime)) return;
-    try { localStorage.setItem(KEY_TIME, String(audio.currentTime)); } catch (e) {}
+    try {
+      localStorage.setItem(KEY_TIME, String(audio.currentTime));
+      localStorage.setItem(KEY_SHOULD_PLAY, String(!audio.paused));
+    } catch (e) {}
   }
 
   function resumeTime() {
@@ -57,7 +61,7 @@
         osc.type = 'sine';
         osc.frequency.setValueAtTime(freq, t);
         gain.gain.setValueAtTime(0.0001, t);
-        gain.gain.exponentialRampToValueAtTime(0.025, t + 0.04);
+        gain.gain.exponentialRampToValueAtTime(0.03, t + 0.04);
         gain.gain.exponentialRampToValueAtTime(0.0001, t + beat * 0.92);
         osc.connect(gain).connect(audioCtx.destination);
         osc.start(t);
@@ -68,7 +72,10 @@
 
     stopSynth();
     playPhrase();
-    try { localStorage.setItem(KEY_MODE, 'synth'); } catch (e) {}
+    try {
+      localStorage.setItem(KEY_MODE, 'synth');
+      localStorage.setItem(KEY_SHOULD_PLAY, 'true');
+    } catch (e) {}
   }
 
   function markAllowed() {
@@ -79,7 +86,10 @@
     if (!audio) return Promise.resolve(false);
     return audio.play().then(() => {
       markAllowed();
-      try { localStorage.setItem(KEY_MODE, 'file'); } catch (e) {}
+      try {
+        localStorage.setItem(KEY_MODE, 'file');
+        localStorage.setItem(KEY_SHOULD_PLAY, 'true');
+      } catch (e) {}
       stopSynth();
       return true;
     }).catch(() => false);
@@ -104,6 +114,11 @@
   function handleAudioError() {
     runSynthLoop();
     markAllowed();
+  }
+
+  function shouldAutoPlay() {
+    const shouldPlay = localStorage.getItem(KEY_SHOULD_PLAY);
+    return shouldPlay !== 'false';
   }
 
   function init() {
@@ -131,22 +146,33 @@
     document.body.appendChild(audio);
 
     resumeTime();
+    if (shouldAutoPlay()) {
+      tryPlayWithFallback();
+    }
+
     if (localStorage.getItem(KEY_ALLOWED) === 'yes' || localStorage.getItem(KEY_MODE) === 'synth') {
       unlockAndPlay();
-    } else {
-      tryPlayWithFallback();
     }
 
     const unlockEvents = ['pointerdown', 'touchstart', 'keydown', 'click'];
     unlockEvents.forEach((evt) => {
-      window.addEventListener(evt, unlockAndPlay, { passive: true });
+      window.addEventListener(evt, unlockAndPlay);
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && shouldAutoPlay()) unlockAndPlay();
+    });
+
+    window.addEventListener('pageshow', () => {
+      if (shouldAutoPlay()) unlockAndPlay();
     });
 
     window.addEventListener('pagehide', saveTime);
     window.addEventListener('beforeunload', saveTime);
     audio.addEventListener('timeupdate', () => {
-      if (Math.random() < 0.08) saveTime();
+      if (Math.random() < 0.12) saveTime();
     });
+    audio.addEventListener('pause', saveTime);
   }
 
   if (document.readyState === 'loading') {

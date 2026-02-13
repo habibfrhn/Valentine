@@ -152,7 +152,9 @@
 
     @media (prefers-reduced-motion: reduce){
       canvas#fx,.sticker{ display:none; }
-      *{ transition:none !important; animation:none !important; }
+      .floatHeart,.rosePetal,.cursorLove{ animation:none !important; }
+      .floatHeart{ top:auto; bottom:10vh; opacity:.9; }
+      .rosePetal{ top:auto; bottom:8vh; opacity:.7; }
     }
   </style>
 </head>
@@ -191,8 +193,8 @@
     });
 
     const heartLayer = document.getElementById('heartLayer');
-    const heartIcons = ['💖','💗','💘','💕','💞','🌹'];
-    let canFloat = !window.matchMedia || !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const heartIcons = ['❤','♥','❣','💖','💘','💕'];
+    let canFloat = true;
     function spawnFloatHeart(){
       if(!canFloat) return;
       const h = document.createElement('span');
@@ -207,6 +209,7 @@
       h.addEventListener('animationend', ()=> h.remove(), { once:true });
       setTimeout(()=> h.remove(), 12500);
     }
+    for(let i=0;i<16;i++) setTimeout(spawnFloatHeart, i*120);
     setInterval(spawnFloatHeart, 460);
 
     function spawnPetal(){

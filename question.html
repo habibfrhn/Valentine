@@ -100,7 +100,10 @@
       50%{ transform: translate3d(0,-10px,0) rotate(calc(var(--r) + 1deg)); }
     }
 
-    @media (prefers-reduced-motion: reduce){ canvas,#fx,.stickerLayer{ display:none; } }
+    @media (prefers-reduced-motion: reduce){
+      canvas,#fx,.stickerLayer{ display:none; }
+      .floatHeart{ animation:none; top:auto; bottom:8vh; opacity:.9; }
+    }
   </style>
 </head>
 <body>
@@ -142,7 +145,7 @@
     const mini = document.getElementById('mini');
 
     const heartLayer = document.getElementById('heartLayer');
-    const heartIcons = ['💖','💗','💘','💕','💞'];
+    const heartIcons = ['❤','♥','❣','💖','💘','💕'];
     function spawnFloatHeart(){
       const h = document.createElement('span');
       h.className = 'floatHeart';
@@ -154,6 +157,7 @@
       heartLayer.appendChild(h);
       h.addEventListener('animationend', ()=> h.remove(), { once:true });
     }
+    for(let i=0;i<14;i++) setTimeout(spawnFloatHeart, i*110);
     setInterval(spawnFloatHeart, 420);
 
     const stickers = ['💗','💞','🌸','🎀','✨','🫶','💘','🍓'];
