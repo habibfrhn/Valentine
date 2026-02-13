@@ -47,13 +47,14 @@
       font-size: clamp(38px, 5vw, 72px);
       pointer-events:none;
       filter: drop-shadow(0 6px 6px rgba(255,120,170,.35));
-      animation: stickerBob 2.8s ease-in-out infinite;
+      animation: stickerBob 5.2s cubic-bezier(.45,.05,.35,1) infinite;
+      will-change: transform;
     }
     .s1{ left:4%; top:8%; transform: rotate(-14deg); }
     .s2{ right:6%; top:7%; transform: rotate(12deg); }
     .s3{ left:6%; bottom:8%; transform: rotate(10deg); }
     .s4{ right:8%; bottom:7%; transform: rotate(-10deg); }
-    @keyframes stickerBob{ 50%{ translate: 0 -10px; } }
+    @keyframes stickerBob{ 50%{ transform: translate3d(0,-14px,0) rotate(4deg); } }
 
     .wrap{ position:relative; z-index:3; min-height:100%; display:grid; place-items:center; padding:24px; }
 
@@ -83,7 +84,7 @@
     .row{ margin-top:14px; display:grid; grid-template-columns: 1fr 1fr; gap:14px; align-items:center; }
     @media (max-width: 860px){ .row{ grid-template-columns: 1fr; } }
 
-    .photos{ position:relative; min-height:310px; }
+    .photos{ position:relative; min-height:330px; padding:8px 0; }
     .polaroid{
       position:absolute;
       width: min(260px, 44vw);
@@ -91,13 +92,17 @@
       border-radius:22px;
       padding:10px 10px 14px;
       box-shadow: 0 16px 30px rgba(200,60,145,.2);
-      animation: floaty 4.2s ease-in-out infinite;
+      animation: floaty 6s cubic-bezier(.45,.08,.3,.99) infinite;
+      will-change: transform;
     }
-    .p1{ left:8%; top:8%; transform: rotate(-10deg); }
-    .p2{ right:8%; bottom:6%; transform: rotate(8deg); animation-duration:3.7s; }
+    .p1{ left:2%; top:5%; transform: rotate(-8deg); }
+    .p2{ right:2%; bottom:4%; transform: rotate(6deg); animation-duration:6.6s; }
     .polaroid img{ width:100%; height:190px; object-fit:cover; border-radius:14px; display:block; }
     .cap{ padding:8px 6px 0; text-align:center; font-weight:700; }
-    @keyframes floaty{ 50%{ translate:0 -8px; } }
+    @keyframes floaty{
+      0%,100%{ transform: translate3d(0,0,0) rotate(var(--r)); }
+      50%{ transform: translate3d(0,-12px,0) rotate(calc(var(--r) + 1deg)); }
+    }
 
     .ctaRow{ margin-top:18px; display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
     .btn{
@@ -108,10 +113,10 @@
       color:#5c2150;
       font-size:18px;
       box-shadow: 0 10px 24px rgba(191,61,138,.24);
-      transition: transform .14s ease;
+      transition: transform .3s cubic-bezier(.2,.8,.2,1), box-shadow .3s ease;
       background: linear-gradient(135deg, #ffc3df, #bceeff);
     }
-    .btn:hover{ transform: translateY(-2px) scale(1.02); }
+    .btn:hover{ transform: translateY(-3px) scale(1.05); box-shadow: 0 14px 30px rgba(191,61,138,.3); }
     .tiny{ margin-top:10px; font-size:14px; opacity:.8; }
 
     @media (prefers-reduced-motion: reduce){
@@ -142,8 +147,8 @@
         </div>
 
         <div class="photos">
-          <div class="polaroid p1"><img src="photos/1.jpeg" alt="Photo 1" /><div class="cap">You make everything softer</div></div>
-          <div class="polaroid p2"><img src="photos/2.jpeg" alt="Photo 2" /><div class="cap">My favorite person</div></div>
+          <div class="polaroid p1" style="--r:-8deg;"><img src="photos/1.jpeg" alt="Photo 1" /><div class="cap">You make everything softer</div></div>
+          <div class="polaroid p2" style="--r:6deg;"><img src="photos/2.jpeg" alt="Photo 2" /><div class="cap">My favorite person</div></div>
         </div>
       </div>
     </main>
@@ -168,7 +173,7 @@
       heartLayer.appendChild(h);
       h.addEventListener('animationend', ()=> h.remove(), { once:true });
     }
-    setInterval(spawnFloatHeart, 380);
+    setInterval(spawnFloatHeart, 460);
 
     const canvas = document.getElementById('fx');
     const ctx = canvas.getContext('2d', { alpha:true });
