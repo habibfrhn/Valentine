@@ -3,16 +3,9 @@
   const KEY_ALLOWED = 'valentine_audio_allowed';
   const KEY_MODE = 'valentine_audio_mode';
   const KEY_SHOULD_PLAY = 'valentine_audio_should_play';
-  const AUDIO_FILE_NAME = 'baby-blue.mp3';
-  const AUDIO_CANDIDATES = [
-    `audio/${AUDIO_FILE_NAME}`,
-    `./audio/${AUDIO_FILE_NAME}`,
-    `/audio/${AUDIO_FILE_NAME}`,
-    AUDIO_FILE_NAME
-  ];
+  const AUDIO_FILE_NAMES = ['baby-blue.mp3', 'baby-blue.wav'];
 
   let audio;
-  let audioCtx;
   let activeCandidateIndex = -1;
 
   function getLikelyProjectBasePath() {
@@ -23,13 +16,25 @@
     return `/${parts[0]}`;
   }
 
+  function getDefaultAudioCandidates() {
+    const projectBase = getLikelyProjectBasePath();
+    return AUDIO_FILE_NAMES.flatMap((fileName) => {
+      const paths = [
+        `audio/${fileName}`,
+        `./audio/${fileName}`,
+        `/audio/${fileName}`,
+        fileName
+      ];
+      if (projectBase) paths.unshift(`${projectBase}/audio/${fileName}`);
+      return paths;
+    });
+  }
+
   function getAudioCandidates() {
     const inline = document.body?.dataset?.audioSrc || document.documentElement?.dataset?.audioSrc;
     const fromMeta = document.querySelector('meta[name="valentine-audio-src"]')?.content;
-    const projectBase = getLikelyProjectBasePath();
-    const withProjectBase = projectBase ? `${projectBase}/audio/${AUDIO_FILE_NAME}` : null;
     const custom = [inline, fromMeta].filter(Boolean);
-    return [...new Set([...custom, withProjectBase, ...AUDIO_CANDIDATES].filter(Boolean))];
+    return [...new Set([...custom, ...getDefaultAudioCandidates()].filter(Boolean))];
   }
 
   async function isCandidateReachable(candidate) {
@@ -79,14 +84,6 @@
     else audio.addEventListener('loadedmetadata', seek, { once: true });
   }
 
-  function ensureAudioContext() {
-    if (audioCtx) return audioCtx;
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (!AudioCtx) return null;
-    audioCtx = new AudioCtx();
-    return audioCtx;
-  }
-
   function markAllowed() {
     try { localStorage.setItem(KEY_ALLOWED, 'yes'); } catch (e) {}
   }
@@ -116,10 +113,6 @@
   }
 
   function unlockAndPlay() {
-    const ctx = ensureAudioContext();
-    if (ctx && ctx.state === 'suspended') {
-      ctx.resume().catch(() => {});
-    }
     return tryPlayAudio();
   }
 
@@ -145,7 +138,7 @@
     }
 
     try { localStorage.setItem(KEY_MODE, 'file-error'); } catch (e) {}
-    console.warn(`[valentine-audio] Missing audio file. Tried: ${candidates.join(', ')}. Expected file name: ${AUDIO_FILE_NAME}.`);
+    console.warn(`[valentine-audio] Missing audio file. Tried: ${candidates.join(', ')}. Expected file name: ${AUDIO_FILE_NAMES.join(' or ')}.`);
     markAllowed();
   }
 
@@ -178,7 +171,7 @@
       resumeTime();
     } else {
       try { localStorage.setItem(KEY_MODE, 'file-error'); } catch (e) {}
-      console.warn(`[valentine-audio] Missing audio file. Tried: ${getAudioCandidates().join(', ')}. Expected file name: ${AUDIO_FILE_NAME}.`);
+      console.warn(`[valentine-audio] Missing audio file. Tried: ${getAudioCandidates().join(', ')}. Expected file name: ${AUDIO_FILE_NAMES.join(' or ')}.`);
       markAllowed();
       return;
     }
