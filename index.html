@@ -8,194 +8,129 @@
   <title>For Shana</title>
   <style>
     :root{
-      --blue:#9fd3ff;
-      --red:#ffb3c7;
-      --ink:#243248;
-      --card: rgba(255,255,255,.84);
-      --card2: rgba(255,255,255,.92);
-      --border: rgba(36,50,72,.10);
-      --shadow: 0 18px 60px rgba(36,50,72,.18);
+      --ink:#4b2a49;
+      --card: rgba(255,255,255,.72);
+      --card2: rgba(255,255,255,.88);
+      --shadow: 0 20px 60px rgba(210,89,150,.25);
     }
     *{ box-sizing:border-box; }
     html,body{ height:100%; }
     body{
       margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      font-family: "Comic Sans MS", "Trebuchet MS", system-ui, sans-serif;
       color:var(--ink);
       overflow:hidden;
       background:
-        radial-gradient(900px 650px at 18% 18%, rgba(159,211,255,.62), transparent 62%),
-        radial-gradient(900px 650px at 84% 24%, rgba(255,179,199,.62), transparent 62%),
-        radial-gradient(900px 700px at 55% 92%, rgba(255,255,255,.92), transparent 58%),
-        linear-gradient(135deg, #f8fbff, #fff3f7);
-    }
-
-    .blob{
-      position:fixed;
-      width:420px;height:420px;border-radius:50%;
-      filter: blur(22px);
-      opacity:.55;
-      z-index:0;
-      pointer-events:none;
-      animation: floaty 7s ease-in-out infinite alternate;
-    }
-    .b1{ left:-120px; top:-120px; background: rgba(159,211,255,.92); }
-    .b2{ right:-140px; top:-140px; background: rgba(255,179,199,.92); animation-duration: 7.8s; }
-    .b3{ left:18%; bottom:-180px; background: rgba(255,255,255,.95); animation-duration: 8.4s; }
-    @keyframes floaty{
-      from{ transform: translate(0,0) scale(1); }
-      to{ transform: translate(26px, 18px) scale(1.03); }
+        radial-gradient(650px 500px at 10% 15%, #ffd6ec88, transparent 65%),
+        radial-gradient(700px 520px at 90% 10%, #c5f2ff99, transparent 65%),
+        radial-gradient(750px 550px at 30% 95%, #ffe8ae88, transparent 68%),
+        linear-gradient(135deg, #fff8fc, #fff0f8 40%, #f7fdff);
     }
 
     canvas#fx{ position:fixed; inset:0; width:100%; height:100%; z-index:1; pointer-events:none; }
 
-    .wrap{
-      position:relative; z-index:2;
-      min-height:100%;
-      display:grid;
-      place-items:center;
-      padding:22px;
+    .sticker{
+      position:fixed;
+      z-index:2;
+      font-size: clamp(38px, 5vw, 72px);
+      pointer-events:none;
+      filter: drop-shadow(0 6px 6px rgba(255,120,170,.35));
+      animation: stickerBob 2.8s ease-in-out infinite;
     }
+    .s1{ left:4%; top:8%; transform: rotate(-14deg); }
+    .s2{ right:6%; top:7%; transform: rotate(12deg); }
+    .s3{ left:6%; bottom:8%; transform: rotate(10deg); }
+    .s4{ right:8%; bottom:7%; transform: rotate(-10deg); }
+    @keyframes stickerBob{ 50%{ translate: 0 -10px; } }
+
+    .wrap{ position:relative; z-index:3; min-height:100%; display:grid; place-items:center; padding:24px; }
 
     .card{
-      width:min(920px, 94vw);
+      width:min(980px, 95vw);
       background: linear-gradient(180deg, var(--card2), var(--card));
-      border: 1px solid var(--border);
       box-shadow: var(--shadow);
-      border-radius: 28px;
-      padding: 22px;
+      border-radius: 34px;
+      padding: 26px;
+      border: 2px dashed #ff9ac8;
       backdrop-filter: blur(10px);
-      overflow:hidden;
       position:relative;
-    }
-
-    h1{
-      margin:0 0 10px;
-      font-size: clamp(28px, 4.2vw, 58px);
-      letter-spacing:-.55px;
-      line-height:1.02;
-    }
-    p{
-      margin:0;
-      font-size: clamp(15px, 2vw, 18px);
-      line-height:1.55;
-      opacity:.92;
-      max-width: 60ch;
-    }
-
-    .row{
-      margin-top:16px;
-      display:grid;
-      grid-template-columns: 1.1fr .9fr;
-      gap:14px;
-      align-items:center;
-    }
-    @media (max-width: 860px){
-      .row{ grid-template-columns: 1fr; }
-    }
-
-    .photos{
-      display:grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap:12px;
-      align-items:stretch;
-    }
-    .polaroid{
-      background: rgba(255,255,255,.80);
-      border:1px solid rgba(36,50,72,.10);
-      border-radius:18px;
       overflow:hidden;
-      box-shadow: 0 16px 44px rgba(36,50,72,.14);
-      transform: rotate(var(--r));
-      animation: bob 3.2s ease-in-out infinite;
     }
-    .polaroid:nth-child(2){ animation-duration: 3.6s; }
-    @keyframes bob{
-      0%,100%{ transform: rotate(var(--r)) translateY(0); }
-      50%{ transform: rotate(var(--r)) translateY(-6px); }
-    }
-    .polaroid img{
-      width:100%;
-      height: 220px;
-      object-fit: cover;
-      display:block;
-    }
-    .cap{
-      padding:10px 10px 12px;
-      font-size:13px;
-      opacity:.86;
+    .card::after{
+      content:"";
+      position:absolute;
+      inset:12px;
+      border:2px dotted #ffc5de;
+      border-radius:24px;
+      pointer-events:none;
     }
 
-    .ctaRow{
-      margin-top:18px;
-      display:flex;
-      gap:12px;
-      flex-wrap:wrap;
-      align-items:center;
+    h1{ margin:0 0 10px; font-size: clamp(32px, 5vw, 62px); line-height:1; }
+    p{ margin:0; font-size: clamp(16px, 2.2vw, 21px); line-height:1.5; max-width: 55ch; }
+
+    .row{ margin-top:14px; display:grid; grid-template-columns: 1fr 1fr; gap:14px; align-items:center; }
+    @media (max-width: 860px){ .row{ grid-template-columns: 1fr; } }
+
+    .photos{ position:relative; min-height:310px; }
+    .polaroid{
+      position:absolute;
+      width: min(260px, 44vw);
+      background: #fff;
+      border-radius:22px;
+      padding:10px 10px 14px;
+      box-shadow: 0 16px 30px rgba(200,60,145,.2);
+      animation: floaty 4.2s ease-in-out infinite;
     }
+    .p1{ left:8%; top:8%; transform: rotate(-10deg); }
+    .p2{ right:8%; bottom:6%; transform: rotate(8deg); animation-duration:3.7s; }
+    .polaroid img{ width:100%; height:190px; object-fit:cover; border-radius:14px; display:block; }
+    .cap{ padding:8px 6px 0; text-align:center; font-weight:700; }
+    @keyframes floaty{ 50%{ translate:0 -8px; } }
+
+    .ctaRow{ margin-top:18px; display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
     .btn{
       appearance:none; border:0; cursor:pointer;
-      padding:14px 18px;
-      border-radius:18px;
-      font-weight:950;
-      color: var(--ink);
-      border: 1px solid rgba(36,50,72,.12);
-      box-shadow: 0 12px 26px rgba(36,50,72,.12);
-      transition: transform .15s ease, filter .15s ease, box-shadow .2s ease;
-      background: linear-gradient(135deg, rgba(159,211,255,.75), rgba(255,179,199,.75));
+      padding:15px 22px;
+      border-radius:999px;
+      font-weight:900;
+      color:#5c2150;
+      font-size:18px;
+      box-shadow: 0 10px 24px rgba(191,61,138,.24);
+      transition: transform .14s ease;
+      background: linear-gradient(135deg, #ffc3df, #bceeff);
     }
-    .btn:hover{ transform: translateY(-1px); filter: brightness(1.02); }
-    .btn:active{ transform: translateY(1px) scale(.99); }
-
-    .tiny{
-      margin-top:12px;
-      font-size:13px;
-      opacity:.74;
-    }
+    .btn:hover{ transform: translateY(-2px) scale(1.02); }
+    .tiny{ margin-top:10px; font-size:14px; opacity:.8; }
 
     @media (prefers-reduced-motion: reduce){
-      canvas#fx, .blob{ display:none; }
+      canvas#fx,.sticker{ display:none; }
       *{ transition:none !important; animation:none !important; }
     }
   </style>
 </head>
 <body>
-  <script>
-    localStorage.removeItem("val_ok");
-  </script>
-
-  <div class="blob b1"></div>
-  <div class="blob b2"></div>
-  <div class="blob b3"></div>
+  <script>localStorage.removeItem("val_ok");</script>
   <canvas id="fx"></canvas>
+
+  <div class="sticker s1">💖</div>
+  <div class="sticker s2">🌸</div>
+  <div class="sticker s3">🎀</div>
+  <div class="sticker s4">✨</div>
 
   <div class="wrap">
     <main class="card">
-      <h1>Happy Valentine Sayang</h1>
-      <p>
-        I made this little page for you.
-        Tap the button when you are ready.
-      </p>
+      <h1>Happy Valentine Sayang 💌</h1>
+      <p>I made this page super cute for you. Tap the button and let the love chaos begin.</p>
 
       <div class="row">
         <div>
-          <div class="ctaRow">
-            <button class="btn" id="start">Open the surprise</button>
-          </div>
-          <div class="tiny">
-            There is a tiny check first.
-          </div>
+          <div class="ctaRow"><button class="btn" id="start">Open the surprise</button></div>
+          <div class="tiny">Tiny check first, then romantic mission unlocked.</div>
         </div>
 
         <div class="photos">
-          <div class="polaroid" style="--r:-2.2deg">
-            <img src="photos/1.jpeg" alt="Photo 1" />
-            <div class="cap">You make everything softer</div>
-          </div>
-          <div class="polaroid" style="--r:2.1deg">
-            <img src="photos/2.jpeg" alt="Photo 2" />
-            <div class="cap">My favorite person</div>
-          </div>
+          <div class="polaroid p1"><img src="photos/1.jpeg" alt="Photo 1" /><div class="cap">You make everything softer</div></div>
+          <div class="polaroid p2"><img src="photos/2.jpeg" alt="Photo 2" /><div class="cap">My favorite person</div></div>
         </div>
       </div>
     </main>
@@ -203,134 +138,51 @@
 
   <script>
     document.getElementById('start').addEventListener('click', ()=>{
-      gentleChime();
-      burst(70);
+      burst(90);
       setTimeout(()=> window.location.href = "verify.html", 520);
     });
 
-    function gentleChime(){
-      try{
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if(!AudioCtx) return;
-        const ctx = new AudioCtx();
-        const o = ctx.createOscillator();
-        const g = ctx.createGain();
-        o.type = 'sine';
-        o.frequency.setValueAtTime(659.25, ctx.currentTime);
-        g.gain.setValueAtTime(0.0001, ctx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.03, ctx.currentTime + 0.01);
-        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.28);
-        o.connect(g).connect(ctx.destination);
-        o.start();
-        o.stop(ctx.currentTime + 0.29);
-        setTimeout(()=> ctx.close(), 420);
-      }catch(e){}
-    }
-
     const canvas = document.getElementById('fx');
     const ctx = canvas.getContext('2d', { alpha:true });
-    let W,H,DPR;
-    const rain = [];
-    const bursts = [];
+    let W,H,DPR; const rain=[]; const bursts=[];
 
-    function resize(){
-      DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-      W = canvas.width = Math.floor(window.innerWidth * DPR);
-      H = canvas.height = Math.floor(window.innerHeight * DPR);
-    }
-    window.addEventListener('resize', resize);
-    resize();
+    function resize(){ DPR=Math.max(1,Math.min(2,window.devicePixelRatio||1)); W=canvas.width=Math.floor(innerWidth*DPR); H=canvas.height=Math.floor(innerHeight*DPR); }
+    addEventListener('resize', resize); resize();
+    const rand=(a,b)=>a+Math.random()*(b-a);
 
-    function rand(a,b){ return a + Math.random()*(b-a); }
-
-    function heartPath(x,y,s,rot){
-      ctx.save();
-      ctx.translate(x,y);
-      ctx.rotate(rot);
-      ctx.scale(s,s);
+    function makeHeart(h){
+      ctx.save(); ctx.translate(h.x,h.y); ctx.rotate(h.rot);
+      const g=ctx.createLinearGradient(-h.s, -h.s, h.s, h.s);
+      g.addColorStop(0,'#ff4fa2'); g.addColorStop(1,'#ff8a65');
+      ctx.fillStyle=g; ctx.globalAlpha=h.a;
       ctx.beginPath();
-      ctx.moveTo(0, 0.35);
-      ctx.bezierCurveTo(0, 0, -0.5, 0, -0.5, 0.35);
-      ctx.bezierCurveTo(-0.5, 0.6, -0.2, 0.85, 0, 1.0);
-      ctx.bezierCurveTo(0.2, 0.85, 0.5, 0.6, 0.5, 0.35);
-      ctx.bezierCurveTo(0.5, 0, 0, 0, 0, 0.35);
-      ctx.closePath();
-      ctx.restore();
+      ctx.moveTo(0, h.s*0.35);
+      ctx.bezierCurveTo(0,0,-h.s*0.5,0,-h.s*0.5,h.s*0.35);
+      ctx.bezierCurveTo(-h.s*0.5,h.s*0.6,-h.s*0.2,h.s*0.85,0,h.s);
+      ctx.bezierCurveTo(h.s*0.2,h.s*0.85,h.s*0.5,h.s*0.6,h.s*0.5,h.s*0.35);
+      ctx.bezierCurveTo(h.s*0.5,0,0,0,0,h.s*0.35);
+      ctx.fill(); ctx.restore();
     }
 
-    function spawnRain(n=50){
-      for(let i=0;i<n;i++){
-        rain.push({
-          x: rand(0,W),
-          y: rand(-H, H),
-          vy: rand(0.8, 2.1) * DPR,
-          vx: rand(-0.30, 0.30) * DPR,
-          s: rand(8, 18) * DPR,
-          rot: rand(-0.8, 0.8),
-          vr: rand(-0.02, 0.02),
-          a: rand(0.12, 0.30)
-        });
-      }
-    }
-    spawnRain(56);
+    for(let i=0;i<70;i++) rain.push({x:rand(0,W),y:rand(-H,H),vx:rand(-.5,.5)*DPR,vy:rand(.8,2.1)*DPR,s:rand(10,18)*DPR,rot:rand(-1,1),vr:rand(-.03,.03),a:rand(.45,.95)});
 
     function burst(n=70){
-      const cx=W*0.5, cy=H*0.45;
-      for(let i=0;i<n;i++){
-        bursts.push({
-          x: cx + rand(-150,150)*DPR,
-          y: cy + rand(-90,90)*DPR,
-          vx: rand(-2.3,2.3)*DPR,
-          vy: rand(-3.3,-0.8)*DPR,
-          s: rand(7,12)*DPR,
-          rot: rand(-1.2,1.2),
-          vr: rand(-0.10,0.10),
-          life: rand(26,56),
-          a: rand(0.45,0.94)
-        });
-      }
+      for(let i=0;i<n;i++) bursts.push({x:W*.5+rand(-200,200),y:H*.4+rand(-100,100),vx:rand(-3,3)*DPR,vy:rand(-4,-1.3)*DPR,s:rand(8,14)*DPR,rot:rand(-1,1),vr:rand(-.12,.12),a:rand(.5,1),life:rand(28,60)});
     }
 
-    function tick(){
+    (function tick(){
       ctx.clearRect(0,0,W,H);
-
       for(const h of rain){
-        h.y += h.vy;
-        h.x += h.vx;
-        h.rot += h.vr;
-        if(h.y > H + 60*DPR){
-          h.y = rand(-260, -40) * DPR;
-          h.x = rand(0, W);
-        }
-        if(h.x < -80*DPR) h.x = W + 80*DPR;
-        if(h.x > W + 80*DPR) h.x = -80*DPR;
-
-        ctx.globalAlpha = h.a;
-        heartPath(h.x, h.y, h.s, h.rot);
-        ctx.fillStyle = 'rgba(255,255,255,.92)';
-        ctx.fill();
+        h.x+=h.vx; h.y+=h.vy; h.rot+=h.vr;
+        if(h.y>H+40) {h.y=rand(-240,-30); h.x=rand(0,W);} if(h.x<-40) h.x=W+40; if(h.x>W+40) h.x=-40;
+        makeHeart(h);
       }
-
       for(let i=bursts.length-1;i>=0;i--){
-        const b = bursts[i];
-        b.x += b.vx;
-        b.y += b.vy;
-        b.vy += 0.09 * DPR;
-        b.rot += b.vr;
-        b.life -= 1;
-
-        const fade = Math.max(0, Math.min(1, b.life / 56));
-        ctx.globalAlpha = b.a * fade;
-        heartPath(b.x, b.y, b.s, b.rot);
-        ctx.fillStyle = 'rgba(255,255,255,.95)';
-        ctx.fill();
-        if(b.life <= 0) bursts.splice(i,1);
+        const b=bursts[i]; b.x+=b.vx; b.y+=b.vy; b.vy+=.12*DPR; b.rot+=b.vr; b.life--;
+        b.a=Math.max(0,b.life/60); makeHeart(b); if(b.life<=0) bursts.splice(i,1);
       }
-
-      ctx.globalAlpha = 1;
       requestAnimationFrame(tick);
-    }
-    requestAnimationFrame(tick);
+    })();
   </script>
 </body>
 </html>
